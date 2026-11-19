@@ -40,8 +40,8 @@ class App(tk.Tk):
         super().__init__()
         self.title("جسر — هاتفك على حاسوبك")
         self.configure(bg=BG)
-        self.geometry("520x720")
-        self.minsize(480, 640)
+        self.geometry("500x680")
+        self.minsize(460, 560)
         self.adb, self.scrcpy = tool("adb"), tool("scrcpy")
         if self.adb:
             os.environ["ADB"] = self.adb
@@ -80,51 +80,68 @@ class App(tk.Tk):
         return f
 
     def _build(self):
-        ttk.Label(self, text="✦ جسر", style="Title.TLabel").pack(anchor="e", padx=16, pady=(16, 0))
+        # السجل والحالة أولاً في الأسفل حتى يبقيا ظاهرين دائماً
+        self.logbox = tk.Text(self, height=7, bg=CARD, fg=MUTED, bd=0, font=("Consolas", 9), wrap="word")
+        self.logbox.pack(side="bottom", fill="x", padx=16, pady=(4, 12))
+        self.logbox.configure(state="disabled")
+        self.status = ttk.Label(self, text="جاهز", style="Sub.TLabel")
+        self.status.pack(side="bottom", anchor="e", padx=16)
+
+        ttk.Label(self, text="✦ جسر", style="Title.TLabel").pack(anchor="e", padx=16, pady=(10, 0))
         ttk.Label(self, text="اعرض شاشة هاتفك على الحاسوب وتحكم بها", style="Sub.TLabel").pack(anchor="e", padx=16)
 
-        c = self.card("١. الجهاز")
+        self.dev_card = self.card("١. الجهاز")
+        c = self.dev_card
         row = ttk.Frame(c, style="Card.TFrame"); row.pack(fill="x")
         ttk.Button(row, text="تحديث", command=self.refresh).pack(side="left")
         self.dev = ttk.Combobox(row, state="readonly", justify="right")
         self.dev.pack(side="right", fill="x", expand=True, padx=(0, 8))
-        ttk.Label(c, text="وصّل الهاتف بكابل USB وفعّل «تصحيح USB» من خيارات المطور.", style="Muted.TLabel").pack(anchor="e", pady=(6, 0))
+        ttk.Label(c, text="وصّل الهاتف بكابل USB وفعّل «تصحيح USB».", style="Muted.TLabel").pack(anchor="e", pady=(6, 0))
 
-        c = self.card("٢. الاتصال اللاسلكي (اختياري)")
-        row = ttk.Frame(c, style="Card.TFrame"); row.pack(fill="x")
-        ttk.Button(row, text="اتصال", command=self.wifi_connect).pack(side="left")
-        self.ip = ttk.Entry(row, justify="left"); self.ip.pack(side="right", fill="x", expand=True, padx=(0, 8))
-        ttk.Label(c, text="عنوان الهاتف مثل 192.168.1.5:5555", style="Muted.TLabel").pack(anchor="e", pady=(6, 4))
-        ttk.Button(c, text="تحويل الكابل إلى لاسلكي تلقائياً", command=self.to_wifi).pack(fill="x")
-
-        c = self.card("٣. الخيارات")
+        c = self.card("٢. الخيارات")
         g = ttk.Frame(c, style="Card.TFrame"); g.pack(fill="x")
         self.size = self._opt(g, 0, "دقة العرض", ["الأصلية", "1920", "1280", "1024"], "1280")
-        self.rate = self._opt(g, 1, "جودة الفيديو (Mbps)", ["4", "8", "16", "24"], "8")
-        self.fps = self._opt(g, 2, "عدد الإطارات", ["30", "60"], "60")
+        self.rate = self._opt(g, 1, "الجودة (Mbps)", ["4", "8", "16", "24"], "8")
+        self.fps = self._opt(g, 2, "الإطارات", ["30", "60"], "60")
         self.v_off = tk.BooleanVar(); self.v_awake = tk.BooleanVar(value=True)
         self.v_top = tk.BooleanVar(); self.v_rec = tk.BooleanVar()
-        for t, v in (("إطفاء شاشة الهاتف أثناء العرض", self.v_off), ("إبقاء الهاتف مستيقظاً", self.v_awake),
-                     ("إبقاء النافذة فوق كل شيء", self.v_top), ("تسجيل الشاشة إلى ملف فيديو", self.v_rec)):
-            ttk.Checkbutton(c, text=t, variable=v).pack(anchor="e", pady=1)
+        ck = ttk.Frame(c, style="Card.TFrame"); ck.pack(fill="x", pady=(8, 0))
+        items = (("إطفاء شاشة الهاتف", self.v_off), ("إبقاء الهاتف مستيقظاً", self.v_awake),
+                 ("النافذة فوق كل شيء", self.v_top), ("تسجيل فيديو", self.v_rec))
+        for i, (t, v) in enumerate(items):
+            ttk.Checkbutton(ck, text=t, variable=v).grid(row=i // 2, column=1 - (i % 2), sticky="e", padx=6, pady=1)
+        ck.columnconfigure(0, weight=1); ck.columnconfigure(1, weight=1)
 
         row = ttk.Frame(self); row.pack(fill="x", padx=16, pady=8)
         self.btn = ttk.Button(row, text="▶  ابدأ عرض الشاشة", style="Go.TButton", command=self.toggle)
         self.btn.pack(fill="x")
         row = ttk.Frame(self); row.pack(fill="x", padx=16)
-        ttk.Button(row, text="📷 لقطة شاشة", command=self.shot).pack(side="right", expand=True, fill="x", padx=(4, 0))
-        ttk.Button(row, text="📁 إرسال ملفات للهاتف", command=self.push).pack(side="left", expand=True, fill="x", padx=(0, 4))
+        ttk.Button(row, text="📷 لقطة", command=self.shot).pack(side="right", expand=True, fill="x", padx=(4, 0))
+        ttk.Button(row, text="📁 إرسال ملفات", command=self.push).pack(side="right", expand=True, fill="x", padx=(4, 0))
+        ttk.Button(row, text="🩺 تشخيص", command=self.diag).pack(side="right", expand=True, fill="x", padx=(4, 0))
+        ttk.Button(row, text="📶 لاسلكي", command=self.toggle_wifi).pack(side="right", expand=True, fill="x")
 
-        self.status = ttk.Label(self, text="جاهز", style="Sub.TLabel"); self.status.pack(anchor="e", padx=16, pady=(8, 0))
-        self.logbox = tk.Text(self, height=7, bg=CARD, fg=MUTED, bd=0, font=("Consolas", 9), wrap="word")
-        self.logbox.pack(fill="both", expand=True, padx=16, pady=(4, 16))
-        self.logbox.configure(state="disabled")
+        # بطاقة الاتصال اللاسلكي (مخفية حتى تضغط «لاسلكي»)
+        self.wifi_card = ttk.Frame(self, style="Card.TFrame", padding=12)
+        ttk.Label(self.wifi_card, text="الاتصال اللاسلكي", font=("Tahoma", 11, "bold")).pack(anchor="e", pady=(0, 6))
+        row = ttk.Frame(self.wifi_card, style="Card.TFrame"); row.pack(fill="x")
+        ttk.Button(row, text="اتصال", command=self.wifi_connect).pack(side="left")
+        self.ip = ttk.Entry(row, justify="left"); self.ip.pack(side="right", fill="x", expand=True, padx=(0, 8))
+        ttk.Label(self.wifi_card, text="العنوان مثل 192.168.1.5:5555", style="Muted.TLabel").pack(anchor="e", pady=(6, 4))
+        ttk.Button(self.wifi_card, text="تحويل الكابل إلى لاسلكي تلقائياً", command=self.to_wifi).pack(fill="x")
 
-    def _opt(self, parent, r, label, vals, default):
-        cb = ttk.Combobox(parent, values=vals, state="readonly", width=10, justify="center")
-        cb.set(default); cb.grid(row=r, column=0, sticky="w", pady=3)
-        ttk.Label(parent, text=label).grid(row=r, column=1, sticky="e", padx=(12, 0))
-        parent.columnconfigure(1, weight=1)
+    def toggle_wifi(self):
+        if self.wifi_card.winfo_ismapped():
+            self.wifi_card.pack_forget()
+        else:
+            self.wifi_card.pack(fill="x", padx=16, pady=6, after=self.dev_card)
+
+    def _opt(self, parent, col, label, vals, default):
+        f = ttk.Frame(parent, style="Card.TFrame"); f.grid(row=0, column=2 - col, padx=6, sticky="ew")
+        ttk.Label(f, text=label).pack(anchor="e")
+        cb = ttk.Combobox(f, values=vals, state="readonly", width=9, justify="center")
+        cb.set(default); cb.pack(fill="x")
+        parent.columnconfigure(2 - col, weight=1)
         return cb
 
     # ---------- مساعدات ----------
@@ -220,6 +237,25 @@ class App(tk.Tk):
             self.proc = None
             self.btn.configure(text="▶  ابدأ عرض الشاشة"); self.status.configure(text="جاهز")
         self.after(1000, self._poll)
+
+    def diag(self):
+        if not self.adb:
+            return self.log("⚠ adb غير موجود.")
+        def job():
+            self.log("— تشخيص —")
+            _, v = run([self.adb, "version"])
+            self.log(v.strip().splitlines()[0] if v.strip() else "adb لا يعمل")
+            run([self.adb, "kill-server"]); run([self.adb, "start-server"])
+            _, o = run([self.adb, "devices", "-l"])
+            self.log(o.strip())
+            if os.name == "nt":
+                ps = ("Get-PnpDevice -PresentOnly | Where-Object { $_.FriendlyName -match "
+                      "'ADB|Android|MTP|Composite|Unisoc|Spreadtrum|MediaTek|itel|Transsion' } | "
+                      "ForEach-Object { $_.Status + ' | ' + $_.FriendlyName }")
+                _, p = run(["powershell", "-NoProfile", "-Command", ps], timeout=25)
+                self.log("أجهزة USB التي يراها ويندوز:\n" + (p.strip() or "لا شيء — الكابل للشحن فقط أو الهاتف على وضع الشحن."))
+            self.log("انتهى. صوّر هذا السجل وأرسله للمطور إن استمرت المشكلة.")
+        self.bg(job)
 
     def shot(self):
         s = self.need()

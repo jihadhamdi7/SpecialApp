@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تطبيقاتي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#1b1f2a;--muted:#667085;--brand:#2563eb;--brand-t:#fff;--line:#e4e7ee;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1219;--card:#181c26;--text:#eef0f6;--muted:#9aa3b5;--brand:#5b8cff;--brand-t:#0b1020;--line:#2a3040}}
+:root[data-theme="dark"]{--bg:#0f1219;--card:#181c26;--text:#eef0f6;--muted:#9aa3b5;--brand:#5b8cff;--brand-t:#0b1020;--line:#2a3040}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Tajawal',Tahoma,Arial,sans-serif;line-height:1.7}
+.wrap{max-width:1000px;margin:auto;padding:0 16px}
+header{padding:64px 0 40px;text-align:center}
+h1{margin:0 0 10px;font-size:2.3rem;font-weight:800}
+header p{margin:0 auto 22px;color:var(--muted);max-width:560px}
+.btn{display:inline-block;background:var(--brand);color:var(--brand-t);padding:10px 20px;border-radius:12px;text-decoration:none;font-weight:700}
+.btn.alt{background:transparent;color:var(--brand);border:1px solid var(--brand)}
+h2.sec{font-size:1.4rem;margin:24px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.icon{font-size:2.2rem}
+.card h3{margin:0;font-size:1.2rem}
+.card p{margin:0;color:var(--muted);flex:1}
+.card ul{margin:0;padding:0 18px 0 0;color:var(--muted);font-size:.92rem}
+.meta{font-size:.82rem;color:var(--muted)}
+.about{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:32px}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:40px 0 24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>🖥️ تطبيقاتي</h1>
+<p>برامج للكمبيوتر صممتها لتسهّل عليك عملك اليومي. حمّلها مجاناً وجرّبها الآن.</p>
+<a class="btn" href="#apps">استعرض التطبيقات</a>
+</header>
+<h2 class="sec" id="apps">التطبيقات</h2>
+<main class="grid" id="grid"></main>
+<section class="about">
+<h2 class="sec" style="margin-top:0">عن المطوّر</h2>
+<p>اكتب هنا نبذة قصيرة عنك: من أنت، ولماذا صنعت هذه التطبيقات، وكيف يتواصل معك المستخدمون.</p>
+<a class="btn alt" href="mailto:you@example.com">تواصل معي</a>
+</section>
+<footer>© تطبيقاتي. جميع الحقوق محفوظة.</footer>
+</div>
+<script>
+/* عدّل هذه القائمة ببياناتك: الاسم، الوصف، المزايا، النسخة، النظام، حجم الملف، ورابط التحميل */
+const apps=[
+{icon:"📝",name:"اسم تطبيقك الأول",desc:"وصف قصير يشرح ما يفعله التطبيق ولمن هو مناسب.",feats:["ميزة أولى","ميزة ثانية","ميزة ثالثة"],ver:"1.0",os:"ويندوز 10/11",size:"25 ميجابايت",url:"#"},
+{icon:"🎬",name:"اسم تطبيقك الثاني",desc:"وصف قصير يشرح ما يفعله التطبيق ولمن هو مناسب.",feats:["ميزة أولى","ميزة ثانية"],ver:"0.9 تجريبي",os:"ويندوز",size:"40 ميجابايت",url:"#"},
+{icon:"🧰",name:"اسم تطبيقك الثالث",desc:"وصف قصير يشرح ما يفعله التطبيق ولمن هو مناسب.",feats:["ميزة أولى","ميزة ثانية","ميزة ثالثة"],ver:"2.1",os:"ويندوز، لينكس",size:"18 ميجابايت",url:"#"}
+];
+document.getElementById("grid").innerHTML=apps.map(a=>`<article class="card"><div class="icon">${a.icon}</div><h3>${a.name}</h3><p>${a.desc}</p><ul>${a.feats.map(f=>`<li>${f}</li>`).join("")}</ul><div class="meta">النسخة ${a.ver} · ${a.os} · ${a.size}</div><a class="btn" href="${a.url}">تحميل</a></article>`).join("");
+</script>
+</body>
+</html>

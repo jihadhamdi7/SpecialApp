@@ -1,0 +1,45 @@
+name: Build Jisr
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["jisr/**", ".github/workflows/build-jisr.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: jisr
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Get scrcpy into tools
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --repo Genymobile/scrcpy --pattern "scrcpy-win64-*.zip" --dir dl
+          Expand-Archive -Path (Get-ChildItem dl\*.zip).FullName -DestinationPath dl\x
+          New-Item -ItemType Directory -Force tools | Out-Null
+          Copy-Item dl\x\*\* tools -Recurse
+
+      - name: Build single exe
+        run: |
+          pip install pyinstaller
+          pyinstaller --noconsole --onefile --name Jisr --add-data "tools;tools" jisr.py
+
+      - name: Publish to fixed release "jisr"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view jisr *> $null
+          if ($LASTEXITCODE -ne 0) { gh release create jisr --title "Jisr" --notes "Jisr.exe ملف واحد. يحتوي scrcpy (Apache 2.0)." }
+          gh release upload jisr dist\Jisr.exe --clobber

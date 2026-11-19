@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تطبيقاتي — برامج مصنوعة بشغف</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f5ff;--surface:rgba(255,255,255,.72);--text:#12142a;--muted:#5b6080;--line:rgba(80,90,160,.18);--a:#6d4aff;--b:#00a8f0;--c:#ff4fa3;--glow:.35;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07081a;--surface:rgba(255,255,255,.05);--text:#f2f3ff;--muted:#a2a7c9;--line:rgba(255,255,255,.12);--a:#8b6bff;--b:#2fd0ff;--c:#ff5fb0;--glow:.6}}
+:root[data-theme="dark"]{--bg:#07081a;--surface:rgba(255,255,255,.05);--text:#f2f3ff;--muted:#a2a7c9;--line:rgba(255,255,255,.12);--a:#8b6bff;--b:#2fd0ff;--c:#ff5fb0;--glow:.6}
+html{scroll-padding-top:90px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Tajawal',Tahoma,Arial,sans-serif;line-height:1.8;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.blob{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(90px);opacity:var(--glow);animation:drift 22s ease-in-out infinite alternate}
+.b1{background:var(--a);top:-20vmax;right:-15vmax}.b2{background:var(--b);bottom:-25vmax;left:-15vmax;animation-delay:-8s}.b3{background:var(--c);top:35%;left:30%;width:30vmax;height:30vmax;opacity:calc(var(--glow)*.55);animation-delay:-14s}
+@keyframes drift{to{transform:translate(6vmax,-5vmax) scale(1.15)}}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse at 50% 30%,#000 0,transparent 70%);mask-image:radial-gradient(ellipse at 50% 30%,#000 0,transparent 70%)}
+.wrap{max-width:1080px;margin:auto;padding:0 20px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:19;backdrop-filter:blur(16px);background:var(--surface)}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:var(--surface);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.25rem;text-decoration:none;color:var(--text)}
+.mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--a),var(--b));display:grid;place-items:center;color:#fff;box-shadow:0 6px 24px -6px var(--a)}
+.links{display:flex;gap:22px;align-items:center}
+.links a{color:var(--muted);text-decoration:none;font-weight:500;transition:.2s}
+.links a:hover,.links a.on{color:var(--text)}
+.tg{border:1px solid var(--line);background:var(--surface);color:var(--text);width:38px;height:38px;border-radius:10px;cursor:pointer}
+.hero{text-align:center;padding:72px 0 30px}
+.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);background:var(--surface);padding:6px 16px;border-radius:99px;font-size:.9rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:#2ee59d;animation:ping 2s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 #2ee59d}70%,100%{box-shadow:0 0 0 10px transparent}}
+h1{font-size:clamp(2.3rem,7vw,4.6rem);line-height:1.15;margin:22px 0 18px;font-weight:900}
+.grad{background:linear-gradient(100deg,var(--a),var(--b) 45%,var(--c));background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.lead{max-width:620px;margin:0 auto 30px;color:var(--muted);font-size:1.15rem}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:14px;text-decoration:none;font-weight:700;font-size:1rem;transition:transform .2s,box-shadow .2s;border:0;font-family:inherit;cursor:pointer}
+.btn.p{color:#fff;background:linear-gradient(120deg,var(--a),var(--b));box-shadow:0 10px 34px -10px var(--a)}
+.btn.p:hover{transform:translateY(-3px)}
+.btn.g{color:var(--text);border:1px solid var(--line);background:var(--surface)}
+.btn.g:hover{transform:translateY(-3px)}
+.btn.off{opacity:.65;cursor:default;transform:none!important}
+.stage{perspective:1400px;margin:50px auto 10px;max-width:780px;position:relative}
+.win{transform:rotateX(9deg) rotateY(-4deg);transition:transform .25s;border-radius:18px;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(20px);box-shadow:0 50px 90px -30px rgba(40,30,120,.55);overflow:hidden;text-align:right}
+.bar{display:flex;gap:7px;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line)}
+.bar i{width:11px;height:11px;border-radius:50%;display:block}.bar i:nth-child(1){background:#ff5f57}.bar i:nth-child(2){background:#febc2e}.bar i:nth-child(3){background:#28c840}
+.bar span{margin-right:auto;font-size:.8rem;color:var(--muted)}
+.body{display:grid;grid-template-columns:150px 1fr;min-height:270px}
+.side{border-left:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:12px}
+.sk{height:11px;border-radius:6px;background:linear-gradient(90deg,var(--line),rgba(150,150,200,.35),var(--line));background-size:200% 100%;animation:sk 2.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.main{padding:20px;display:flex;flex-direction:column;gap:14px}.row{display:flex;gap:12px}
+.tile{flex:1;height:64px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,color-mix(in srgb,var(--a) 22%,transparent),color-mix(in srgb,var(--b) 14%,transparent))}
+.chart{flex:1;display:flex;align-items:flex-end;gap:9px;border:1px solid var(--line);border-radius:12px;padding:14px;min-height:110px}
+.chart b{flex:1;border-radius:6px 6px 0 0;background:linear-gradient(var(--b),var(--a));animation:gr 3.6s ease-in-out infinite alternate;transform-origin:bottom}
+.chart b:nth-child(1){height:40%}.chart b:nth-child(2){height:68%;animation-delay:-.5s}.chart b:nth-child(3){height:52%;animation-delay:-1s}.chart b:nth-child(4){height:86%;animation-delay:-1.5s}.chart b:nth-child(5){height:62%;animation-delay:-2s}.chart b:nth-child(6){height:94%;animation-delay:-2.5s}
+@keyframes gr{50%{transform:scaleY(.72)}}
+.float{position:absolute;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(14px);font-size:.85rem;font-weight:700;animation:fl 5s ease-in-out infinite alternate;z-index:2}
+.f1{top:10%;left:-3%}.f2{bottom:12%;right:-3%;animation-delay:-2s}
+@keyframes fl{to{transform:translateY(-14px)}}
+section{padding:56px 0}
+.eyebrow{color:var(--b);font-weight:700;font-size:.95rem;margin-bottom:6px}
+h2{font-size:clamp(1.7rem,4vw,2.5rem);margin:0 0 12px;font-weight:900;line-height:1.3}
+.sub{color:var(--muted);max-width:560px;margin:0 0 32px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.card{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(14px);border-radius:20px;padding:26px;transition:transform .25s;display:block;color:inherit;text-decoration:none}
+.card:hover{transform:translateY(-6px)}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--a) 28%,transparent),transparent 70%);opacity:0;transition:opacity .3s;pointer-events:none}
+.card:hover::before{opacity:1}
+.ic{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;font-size:1.5rem;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 30%,transparent),color-mix(in srgb,var(--b) 25%,transparent));margin-bottom:14px}
+.card h3{margin:0 0 6px;font-size:1.2rem;position:relative}.card p{margin:0 0 10px;color:var(--muted);position:relative}
+.more{color:var(--b);font-weight:700;position:relative}
+.chip{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:700;font-size:.8rem;margin-bottom:8px;background:color-mix(in srgb,#ffb020 22%,transparent);color:#c98200}
+.chip.ok{background:color-mix(in srgb,#2ee59d 22%,transparent);color:#0a9a62}
+.page{padding:44px 0 20px}
+.back{color:var(--muted);text-decoration:none;font-weight:500}.back:hover{color:var(--text)}
+.ahead{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin:22px 0 10px}
+.ahead .ic{width:84px;height:84px;font-size:2.8rem;border-radius:24px;margin:0}
+.ahead h1{margin:0;font-size:clamp(2rem,5vw,3rem)}
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.feat{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px 18px}
+.feat b{display:block}.feat span{color:var(--muted);font-size:.93rem}
+.steps{counter-reset:s;display:grid;gap:12px}
+.st{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:16px 18px}
+.st::before{counter-increment:s;content:counter(s);flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--a),var(--b))}
+.st b{display:block}.st span{color:var(--muted)}
+details{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 18px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:700}details p{margin:8px 0 0;color:var(--muted)}
+.req{display:flex;gap:10px;flex-wrap:wrap}.req span{border:1px solid var(--line);background:var(--surface);padding:6px 16px;border-radius:99px;color:var(--muted);font-size:.92rem}
+footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted);font-size:.9rem;margin-top:40px}
+.js .rv{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}.js .rv.in{opacity:1;transform:none}
+@media (max-width:640px){.links a:not(.tg){display:none}.links a.keep{display:inline}.body{grid-template-columns:1fr}.side{display:none}.f1,.f2{display:none}.win{transform:none}.hero{padding-top:48px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.js .rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div></div>
+<nav><div class="wrap">
+<a class="logo" href="#home"><span class="mark">✦</span>تطبيقاتي</a>
+<div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a href="#about" data-n="about">عن الموقع</a><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
+</div></nav>
+<div id="v"></div>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف</div></footer>
+<script>
+document.documentElement.classList.add("js");
+const CONTACT="mailto:you@example.com";
+const CATS=[{id:"connect",name:"ربط الأجهزة",icon:"🔗",desc:"أدوات تربط هاتفك بحاسوبك وتجعلهما يعملان معاً."}];
+const APPS=[{
+ id:"jisr",cat:"connect",name:"جسر",icon:"📱",ver:"1.0",
+ /* بعد نجاح البناء على GitHub غيّر ready إلى true ليظهر زر التحميل */
+ ready:false,url:"https://github.com/jihadhamdi7/jihad/releases/download/jisr/Jisr.exe",
+ short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",
+ feats:[["عرض شاشة الهاتف","على الحاسوب بوضوح عالٍ وسرعة كبيرة"],["كابل أو لاسلكي","اتصال بكابل USB أو عبر شبكة الواي فاي"],["تحكم كامل","بالماوس ولوحة المفاتيح من الحاسوب"],["تسجيل ولقطات","سجّل الشاشة أو التقط صورة بنقرة"],["نقل الملفات","أرسل ملفات من الحاسوب إلى الهاتف"],["خيارات الجودة","اختر الدقة والإطارات وجودة الفيديو"]],
+ os:["ويندوز 10 أو 11","هاتف أندرويد 5 أو أحدث","كابل USB أو شبكة واي فاي"],
+ steps:[["حمّل الملف وشغّله","ملف واحد Jisr.exe فقط، بدون تثبيت وبدون أي ملفات إضافية."],["فعّل تصحيح USB في هاتفك","الإعدادات ← حول الهاتف ← اضغط «رقم الإصدار» 7 مرات، ثم فعّل «تصحيح USB» من خيارات المطور."],["وصّل الهاتف وشغّل جسر","وافق على نافذة السماح بالتصحيح في الهاتف، ثم اضغط «ابدأ عرض الشاشة»."]],
+ faq:[["هل التطبيق مجاني؟","نعم، مجاني بالكامل وبدون إعلانات."],["هل يعمل مع الآيفون؟","ليس حالياً، النسخة الأولى لهواتف أندرويد فقط."],["هل يحتاج إنترنت؟","لا. الاتصال بين الهاتف والحاسوب مباشر ولا تُرسل بياناتك إلى أي مكان."],["لماذا يحذرني ويندوز عند التشغيل؟","البرامج الجديدة غير الموقّعة تظهر فيها هذه الرسالة. اختر «مزيد من المعلومات» ثم «تشغيل على أي حال»."]]
+}];
+const $=s=>document.querySelector(s);
+const cat=id=>CATS.find(c=>c.id===id);
+const status=a=>a.ready?'<span class="chip ok">متاح الآن</span>':'<span class="chip">قيد التطوير</span>';
+const appCard=a=>`<a class="card rv" href="#${a.id}"><div class="ic">${a.icon}</div>${status(a)}<h3>${a.name}</h3><p>${a.short}</p><span class="more">التفاصيل ←</span></a>`;
+const dl=a=>a.ready?`<a class="btn p" href="${a.url}" download>⬇ تحميل ${a.name} لويندوز</a>`:`<span class="btn g off">⏳ التحميل قريباً</span>`;
+const mock=`<div class="stage rv"><div class="float f1">📱 هاتفك</div><div class="float f2">🖥️ حاسوبك</div><div class="win" id="win"><div class="bar"><i></i><i></i><i></i><span>جسر — هاتفك على حاسوبك</span></div><div class="body"><div class="side"><div class="sk" style="width:80%"></div><div class="sk" style="width:60%"></div><div class="sk" style="width:90%"></div><div class="sk" style="width:50%"></div></div><div class="main"><div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div><div class="chart"><b></b><b></b><b></b><b></b><b></b><b></b></div></div></div></div></div>`;
+const V={
+home:()=>`<header class="hero wrap"><span class="pill rv"><span class="dot"></span>استوديو مستقل لبرامج الكمبيوتر</span>
+<h1 class="rv">نصنع برامج <span class="grad">تبدو كالمستقبل</span><br>وتعمل كالسحر</h1>
+<p class="lead rv">تطبيقات سطح مكتب سريعة وأنيقة وخفيفة. أول تطبيقاتنا «جسر» يربط هاتفك بحاسوبك ويعرض شاشته.</p>
+<div class="cta rv"><a class="btn p" href="#jisr">اكتشف «جسر» ←</a><a class="btn g" href="#apps">كل التطبيقات</a></div>${mock}</header>
+<section class="wrap"><div class="eyebrow rv">تطبيقنا الأول</div><h2 class="rv">جسر بين هاتفك وحاسوبك</h2><div class="cards">${APPS.map(appCard).join("")}</div></section>
+<section class="wrap"><div class="eyebrow rv">مبادئنا</div><h2 class="rv">ثلاث وعود في كل تطبيق</h2><div class="cards">
+<div class="card rv"><div class="ic">⚡</div><h3>خفيف وسريع</h3><p>يفتح في ثوانٍ ولا يستهلك موارد جهازك.</p></div>
+<div class="card rv"><div class="ic">🎯</div><h3>بسيط وواضح</h3><p>واجهة عربية مفهومة من أول لحظة بلا تعقيد.</p></div>
+<div class="card rv"><div class="ic">🔒</div><h3>يحترم خصوصيتك</h3><p>بدون إعلانات وبدون جمع بياناتك.</p></div></div></section>`,
+apps:()=>`<div class="wrap page"><div class="eyebrow rv">المكتبة</div><h2 class="rv">التطبيقات</h2><p class="sub rv">تصفّح التطبيقات حسب النوع.</p>
+<h3 class="rv">الأنواع</h3><div class="cards">${CATS.map(c=>`<a class="card rv" href="#cat-${c.id}"><div class="ic">${c.icon}</div><h3>${c.name}</h3><p>${c.desc}</p><span class="more">${APPS.filter(a=>a.cat===c.id).length} تطبيق ←</span></a>`).join("")}
+<a class="card rv" href="${CONTACT}?subject=اقتراح تطبيق"><div class="ic">💡</div><h3>اقترح تطبيقاً</h3><p>هل تحتاج برنامجاً غير موجود؟ أخبرنا وقد نصنعه.</p><span class="more">أرسل فكرتك ←</span></a></div>
+<h3 class="rv" style="margin-top:36px">كل التطبيقات</h3><div class="cards">${APPS.map(appCard).join("")}</div></div>`,
+cat:id=>{const c=cat(id);if(!c)return V.nf();return `<div class="wrap page"><a class="back" href="#apps">← كل التطبيقات</a><div class="eyebrow rv" style="margin-top:18px">${c.icon} نوع</div><h2 class="rv">${c.name}</h2><p class="sub rv">${c.desc}</p><div class="cards">${APPS.filter(a=>a.cat===id).map(appCard).join("")}</div></div>`},
+app:a=>`<div class="wrap page"><a class="back" href="#cat-${a.cat}">← ${cat(a.cat).name}</a>
+<div class="ahead rv"><div class="ic">${a.icon}</div><div>${status(a)}<h1>${a.name}</h1><p class="sub" style="margin:0">${a.short}</p></div></div>
+<div class="cta rv" style="justify-content:flex-start;margin:18px 0 8px">${dl(a)}<span class="pill">النسخة ${a.ver} · مجاني</span></div>
+<section style="padding:36px 0 10px"><h2 class="rv">المزايا</h2><div class="feats">${a.feats.map(f=>`<div class="feat rv"><b>${f[0]}</b><span>${f[1]}</span></div>`).join("")}</div></section>
+<section style="padding:30px 0 10px"><h2 class="rv">كيف تستخدمه؟</h2><div class="steps">${a.steps.map(s=>`<div class="st rv"><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join("")}</div></section>
+<section style="padding:30px 0 10px"><h2 class="rv">المتطلبات</h2><div class="req rv">${a.os.map(o=>`<span>${o}</span>`).join("")}</div></section>
+<section style="padding:30px 0 0"><h2 class="rv">أسئلة شائعة</h2>${a.faq.map(f=>`<details class="rv"><summary>${f[0]}</summary><p>${f[1]}</p></details>`).join("")}</section></div>`,
+about:()=>`<div class="wrap page"><div class="eyebrow rv">من نحن</div><h2 class="rv">عن الموقع</h2><p class="sub rv" style="max-width:640px">اكتب هنا نبذة عنك: من أنت، ولماذا تصنع هذه التطبيقات، وما الذي تحلم به. اجعلها قصيرة وصادقة.</p><a class="btn p rv" href="${CONTACT}">تواصل معنا</a></div>`,
+nf:()=>`<div class="wrap page" style="text-align:center"><h2>الصفحة غير موجودة</h2><a class="btn p" href="#home">العودة للرئيسية</a></div>`
+};
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.1});
+function route(){
+ const h=(location.hash||"#home").slice(1);let html,nav=h;
+ const a=APPS.find(x=>x.id===h);
+ if(a){html=V.app(a);nav="apps"}else if(h.startsWith("cat-")){html=V.cat(h.slice(4));nav="apps"}else if(V[h]&&!["cat","app","nf"].includes(h))html=V[h]();else html=V.nf();
+ $("#v").innerHTML=html;scrollTo(0,0);
+ document.querySelectorAll(".links a[data-n]").forEach(l=>l.classList.toggle("on",l.dataset.n===nav));
+ document.querySelectorAll(".rv").forEach((el,i)=>{el.style.transitionDelay=(i%4)*60+"ms";io.observe(el)});
+ document.querySelectorAll(".card").forEach(c=>c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();c.style.setProperty("--mx",e.clientX-r.left+"px");c.style.setProperty("--my",e.clientY-r.top+"px")}));
+ const w=$("#win");
+ if(w&&matchMedia("(hover:hover)").matches){const s=w.parentElement;s.addEventListener("pointermove",e=>{const r=s.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;w.style.transform=`rotateX(${9-y*10}deg) rotateY(${-4+x*12}deg)`});s.addEventListener("pointerleave",()=>w.style.transform="")}
+}
+addEventListener("hashchange",route);route();
+const R=document.documentElement;
+try{const t=localStorage.getItem("th");if(t)R.dataset.theme=t}catch(e){}
+$("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;const n=d?"light":"dark";R.dataset.theme=n;try{localStorage.setItem("th",n)}catch(e){}};
+</script>
+</body>
+</html>

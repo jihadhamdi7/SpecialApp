@@ -94,6 +94,7 @@ class App(tk.Tk):
         c = self.dev_card
         row = ttk.Frame(c, style="Card.TFrame"); row.pack(fill="x")
         ttk.Button(row, text="تحديث", command=self.refresh).pack(side="left")
+        ttk.Button(row, text="📶 لاسلكي", command=self.wifi_wizard).pack(side="left", padx=(6, 6))
         self.dev = ttk.Combobox(row, state="readonly", justify="right")
         self.dev.pack(side="right", fill="x", expand=True, padx=(0, 8))
         ttk.Label(c, text="وصّل الهاتف بكابل USB وفعّل «تصحيح USB».", style="Muted.TLabel").pack(anchor="e", pady=(6, 0))
@@ -119,28 +120,7 @@ class App(tk.Tk):
         ttk.Button(row, text="📷 لقطة", command=self.shot).pack(side="right", expand=True, fill="x", padx=(4, 0))
         ttk.Button(row, text="📁 إرسال ملفات", command=self.push).pack(side="right", expand=True, fill="x", padx=(4, 0))
         ttk.Button(row, text="🩺 تشخيص", command=self.diag).pack(side="right", expand=True, fill="x", padx=(4, 0))
-        ttk.Button(row, text="📶 لاسلكي", command=self.toggle_wifi).pack(side="right", expand=True, fill="x")
 
-        # بطاقة الاتصال اللاسلكي (مخفية حتى تضغط «لاسلكي»)
-        self.wifi_card = ttk.Frame(self, style="Card.TFrame", padding=12)
-        w = self.wifi_card
-        ttk.Label(w, text="الاتصال اللاسلكي (أندرويد 11 أو أحدث)", font=("Tahoma", 11, "bold")).pack(anchor="e", pady=(0, 6))
-        ttk.Label(w, text="١) الاقتران (مرة واحدة): عنوان الاقتران ورمزه من الهاتف", style="Muted.TLabel").pack(anchor="e")
-        row = ttk.Frame(w, style="Card.TFrame"); row.pack(fill="x", pady=(4, 8))
-        ttk.Button(row, text="اقتران", command=self.pair).pack(side="left")
-        self.pair_code = ttk.Entry(row, width=9, justify="center"); self.pair_code.pack(side="left", padx=6)
-        self.pair_addr = ttk.Entry(row, justify="left"); self.pair_addr.pack(side="right", fill="x", expand=True)
-        ttk.Label(w, text="٢) الاتصال: العنوان الظاهر في شاشة «التصحيح اللاسلكي»", style="Muted.TLabel").pack(anchor="e")
-        row = ttk.Frame(w, style="Card.TFrame"); row.pack(fill="x", pady=(4, 8))
-        ttk.Button(row, text="اتصال", command=self.wifi_connect).pack(side="left")
-        self.ip = ttk.Entry(row, justify="left"); self.ip.pack(side="right", fill="x", expand=True, padx=(0, 8))
-        ttk.Button(w, text="لديّ كابل: حوّله إلى لاسلكي تلقائياً", command=self.to_wifi).pack(fill="x")
-
-    def toggle_wifi(self):
-        if self.wifi_card.winfo_ismapped():
-            self.wifi_card.pack_forget()
-        else:
-            self.wifi_card.pack(fill="x", padx=16, pady=6, after=self.dev_card)
 
     def _opt(self, parent, col, label, vals, default):
         f = ttk.Frame(parent, style="Card.TFrame"); f.grid(row=0, column=2 - col, padx=6, sticky="ew")
@@ -193,21 +173,86 @@ class App(tk.Tk):
             self.log(f"تم العثور على {len(names)} جهاز." if names else "لا يوجد جهاز متصل.")
         if self.adb: self.bg(job)
 
-    def wifi_connect(self):
-        addr = self.ip.get().strip()
-        if not addr: return self.log("اكتب عنوان الهاتف أولاً.")
+    # ---------- الاتصال اللاسلكي (معالج بسيط) ----------
+    def say(self, t):
+        self.log(t)
+        def u():
+            if getattr(self, "wz", None) and self.wz.winfo_exists():
+                self.wz_msg.configure(text=t)
+        self.after(0, u)
+
+    def find(self, kind, timeout):
+        """يبحث عن الهاتف في الشبكة تلقائياً (kind: pairing أو connect)."""
+        pat = re.compile(r"_adb-tls-%s\._tcp\.?\s+(\d+\.\d+\.\d+\.\d+:\d+)" % kind)
+        end = time.time() + timeout
+        while time.time() < end:
+            _, o = run([self.adb, "mdns", "services"], timeout=10)
+            m = pat.search(o)
+            if m:
+                return m.group(1)
+            time.sleep(1.5)
+        return None
+
+    def wifi_wizard(self):
+        if not self.adb:
+            return self.log("⚠ adb غير موجود.")
+        if getattr(self, "wz", None) and self.wz.winfo_exists():
+            self.wz.lift(); return
+        w = self.wz = tk.Toplevel(self)
+        w.title("اتصال لاسلكي"); w.configure(bg=BG); w.geometry("470x600"); w.transient(self)
+        f = ttk.Frame(w, style="Card.TFrame", padding=14); f.pack(fill="both", expand=True, padx=12, pady=12)
+        ttk.Label(f, text="اربط هاتفك بدون كابل", font=("Tahoma", 14, "bold")).pack(anchor="e")
+        ttk.Label(f, text="أندرويد 11 أو أحدث، والهاتف والحاسوب على نفس الواي فاي", style="Muted.TLabel").pack(anchor="e", pady=(0, 10))
+        for t in ("١) في الهاتف: الإعدادات ← خيارات المطور ← «التصحيح اللاسلكي» وفعّله.",
+                  "٢) اضغط «الاقتران برمز الاقتران» وابقَ في تلك الشاشة.",
+                  "٣) اكتب الرمز (6 أرقام) هنا ثم اضغط «اربط»:"):
+            ttk.Label(f, text=t, wraplength=420, justify="right").pack(anchor="e", pady=2)
+        self.wz_code = ttk.Entry(f, justify="center", font=("Consolas", 20), width=8)
+        self.wz_code.pack(pady=10); self.wz_code.focus_set()
+        ttk.Button(f, text="🔗  اربط الهاتف", style="Go.TButton", command=self.wz_go).pack(fill="x")
+        self.wz_msg = ttk.Label(f, text="", style="Muted.TLabel", wraplength=420, justify="right")
+        self.wz_msg.pack(anchor="e", pady=8)
+        ttk.Button(f, text="🔄 اتصال سريع (هاتف سبق ربطه)", command=self.wz_quick).pack(fill="x", pady=(4, 4))
+        ttk.Button(f, text="🔌 لديّ كابل: حوّله إلى لاسلكي", command=self.to_wifi).pack(fill="x")
+        ttk.Label(f, text="لم يُكتشف الهاتف؟ اكتب العناوين من شاشة الهاتف (اختياري):", style="Muted.TLabel", wraplength=420, justify="right").pack(anchor="e", pady=(12, 2))
+        self.m_pair = ttk.Entry(f, justify="left"); self.m_pair.pack(fill="x")
+        ttk.Label(f, text="↑ عنوان الاقتران، مثل 192.168.1.7:38291", style="Muted.TLabel").pack(anchor="e")
+        self.m_conn = ttk.Entry(f, justify="left"); self.m_conn.pack(fill="x", pady=(6, 0))
+        ttk.Label(f, text="↑ عنوان الاتصال، مثل 192.168.1.7:41999", style="Muted.TLabel").pack(anchor="e")
+
+    def wz_go(self):
+        code = self.wz_code.get().strip()
+        if not re.fullmatch(r"\d{6}", code):
+            return self.say("اكتب الرمز: 6 أرقام بالضبط كما يظهر في الهاتف.")
+        pa, ca = self.m_pair.get().strip(), self.m_conn.get().strip()
         def job():
-            _, out = run([self.adb, "connect", addr]); self.log(out.strip()); self.refresh()
+            self.say("🔎 أبحث عن هاتفك…")
+            addr = pa or self.find("pairing", 12)
+            if not addr:
+                return self.say("لم أجد الهاتف. تأكد أنك داخل شاشة «الاقتران برمز الاقتران» وأن الشبكة واحدة، أو اكتب عنوان الاقتران يدوياً بالأسفل.")
+            self.say(f"وجدت الهاتف ({addr.split(':')[0]}). جارٍ الاقتران…")
+            _, o = run([self.adb, "pair", addr, code], timeout=40)
+            if "uccessfully" not in o:
+                return self.say("فشل الاقتران. الرمز يتغير كل مرة: أغلق نافذة الاقتران في الهاتف وافتحها من جديد وأعد المحاولة.")
+            self.say("تم الاقتران ✔ جارٍ الاتصال…")
+            self.wz_connect(ca)
         self.bg(job)
 
-    def pair(self):
-        a, c = self.pair_addr.get().strip(), self.pair_code.get().strip()
-        if not (a and c):
-            return self.log("اكتب عنوان الاقتران (مثل 192.168.1.5:37123) والرمز المكوّن من 6 أرقام.")
-        def job():
-            _, o = run([self.adb, "pair", a, c]); self.log(o.strip())
-            self.log("إن نجح الاقتران فاكتب الآن عنوان الاتصال في الخانة ٢ واضغط اتصال.")
-        if self.adb: self.bg(job)
+    def wz_quick(self):
+        ca = self.m_conn.get().strip()
+        self.bg(lambda: (self.say("🔎 أبحث عن هاتفك…"), self.wz_connect(ca)))
+
+    def wz_connect(self, manual=""):
+        addr = manual or self.find("connect", 15)
+        if not addr:
+            return self.say("لم أجد عنوان الاتصال. تأكد أن «التصحيح اللاسلكي» مفعّل، أو اكتب عنوان الاتصال (الذي تحت اسم جهازك) يدوياً.")
+        _, o = run([self.adb, "connect", addr], timeout=30)
+        if "connected to" in o:
+            self.say("✔ تم الاتصال! يمكنك الآن الضغط على «ابدأ عرض الشاشة».")
+            self.refresh()
+            self.after(1800, lambda: self.wz.destroy() if getattr(self, "wz", None) and self.wz.winfo_exists() else None)
+        else:
+            self.say("تعذر الاتصال: " + (o.strip().splitlines()[-1] if o.strip() else "بدون رد"))
 
     def to_wifi(self):
         s = self.need()
@@ -215,12 +260,11 @@ class App(tk.Tk):
         def job():
             _, out = run([self.adb, "-s", s, "shell", "ip", "route"])
             m = re.search(r"src (\d+\.\d+\.\d+\.\d+)", out)
-            if not m: return self.log("تعذر معرفة عنوان الهاتف. تأكد من اتصاله بنفس شبكة الواي فاي.")
+            if not m: return self.say("تعذر معرفة عنوان الهاتف. تأكد من اتصاله بنفس الواي فاي.")
             addr = f"{m.group(1)}:5555"
             run([self.adb, "-s", s, "tcpip", "5555"]); time.sleep(2)
-            _, o = run([self.adb, "connect", addr]); self.log(o.strip())
-            self.after(0, lambda: (self.ip.delete(0, "end"), self.ip.insert(0, addr)))
-            self.log("يمكنك الآن فصل الكابل."); self.refresh()
+            _, o = run([self.adb, "connect", addr])
+            self.say(o.strip() + " — يمكنك فصل الكابل الآن."); self.refresh()
         self.bg(job)
 
     def toggle(self):
@@ -261,6 +305,7 @@ class App(tk.Tk):
             _, v = run([self.adb, "version"])
             self.log(v.strip().splitlines()[0] if v.strip() else "adb لا يعمل")
             run([self.adb, "kill-server"]); run([self.adb, "start-server"])
+            _, mm = run([self.adb, "mdns", "check"]); self.log("mdns: " + (mm.strip().splitlines()[0] if mm.strip() else "غير متاح"))
             _, o = run([self.adb, "devices", "-l"])
             self.log(o.strip())
             if os.name == "nt":

@@ -10,6 +10,11 @@ MEI = Path(getattr(sys, "_MEIPASS", BASE))  # الملفات المدمجة دا
 NOWIN = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 BG, CARD, FG, MUTED, ACC = "#0b0d22", "#151833", "#f2f3ff", "#a2a7c9", "#6d4aff"
 FONT = ("Tahoma", 10)
+PRESETS = {  # (الدقة، الجودة Mbps، الإطارات، بدون صوت)
+    "ألعاب — الأخف على الهاتف": ("720", "4", "30", True),
+    "متوازن": ("1024", "6", "45", True),
+    "جودة عالية": ("1920", "16", "60", False),
+}
 
 
 def tool(name):
@@ -100,18 +105,27 @@ class App(tk.Tk):
         ttk.Label(c, text="وصّل الهاتف بكابل USB وفعّل «تصحيح USB».", style="Muted.TLabel").pack(anchor="e", pady=(6, 0))
 
         c = self.card("٢. الخيارات")
+        pr = ttk.Frame(c, style="Card.TFrame"); pr.pack(fill="x", pady=(0, 8))
+        self.preset = ttk.Combobox(pr, values=list(PRESETS), state="readonly", justify="center")
+        self.preset.pack(side="left", fill="x", expand=True)
+        ttk.Label(pr, text="نمط الأداء").pack(side="right", padx=(8, 0))
         g = ttk.Frame(c, style="Card.TFrame"); g.pack(fill="x")
-        self.size = self._opt(g, 0, "دقة العرض", ["الأصلية", "1920", "1280", "1024"], "1280")
-        self.rate = self._opt(g, 1, "الجودة (Mbps)", ["4", "8", "16", "24"], "8")
-        self.fps = self._opt(g, 2, "الإطارات", ["30", "60"], "60")
+        self.size = self._opt(g, 0, "دقة العرض", ["الأصلية", "1920", "1280", "1024", "720", "480"], "720")
+        self.rate = self._opt(g, 1, "الجودة (Mbps)", ["2", "4", "6", "8", "16", "24"], "4")
+        self.fps = self._opt(g, 2, "الإطارات", ["20", "30", "45", "60"], "30")
         self.v_off = tk.BooleanVar(); self.v_awake = tk.BooleanVar(value=True)
-        self.v_top = tk.BooleanVar(); self.v_rec = tk.BooleanVar()
+        self.v_top = tk.BooleanVar(); self.v_rec = tk.BooleanVar(); self.v_noaudio = tk.BooleanVar(value=True)
+        self.v_hw = tk.BooleanVar(value=True); self.v_low = tk.BooleanVar()
         ck = ttk.Frame(c, style="Card.TFrame"); ck.pack(fill="x", pady=(8, 0))
-        items = (("إطفاء شاشة الهاتف", self.v_off), ("إبقاء الهاتف مستيقظاً", self.v_awake),
-                 ("النافذة فوق كل شيء", self.v_top), ("تسجيل فيديو", self.v_rec))
+        items = (("إطفاء شاشة الهاتف", self.v_off), ("تسجيل فيديو", self.v_rec),
+                 ("بدون صوت (أخف)", self.v_noaudio), ("ترميز بالعتاد (أسرع)", self.v_hw),
+                 ("أولوية منخفضة (لألعاب الحاسوب)", self.v_low))
         for i, (t, v) in enumerate(items):
             ttk.Checkbutton(ck, text=t, variable=v).grid(row=i // 2, column=1 - (i % 2), sticky="e", padx=6, pady=1)
         ck.columnconfigure(0, weight=1); ck.columnconfigure(1, weight=1)
+        self.preset.bind("<<ComboboxSelected>>", self.apply_preset)
+        self.preset.set(list(PRESETS)[0])
+        self.apply_preset()
 
         row = ttk.Frame(self); row.pack(fill="x", padx=16, pady=8)
         self.btn = ttk.Button(row, text="▶  ابدأ عرض الشاشة", style="Go.TButton", command=self.toggle)
@@ -121,6 +135,10 @@ class App(tk.Tk):
         ttk.Button(row, text="📁 إرسال ملفات", command=self.push).pack(side="right", expand=True, fill="x", padx=(4, 0))
         ttk.Button(row, text="🩺 تشخيص", command=self.diag).pack(side="right", expand=True, fill="x", padx=(4, 0))
 
+
+    def apply_preset(self, *_):
+        size, rate, fps, noaudio = PRESETS[self.preset.get()]
+        self.size.set(size); self.rate.set(rate); self.fps.set(fps); self.v_noaudio.set(noaudio)
 
     def _opt(self, parent, col, label, vals, default):
         f = ttk.Frame(parent, style="Card.TFrame"); f.grid(row=0, column=2 - col, padx=6, sticky="ew")
@@ -135,6 +153,7 @@ class App(tk.Tk):
         def w():
             self.logbox.configure(state="normal")
             self.logbox.insert("end", msg + "\n"); self.logbox.see("end")
+            if int(self.logbox.index("end-1c").split(".")[0]) > 300: self.logbox.delete("1.0", "100.0")
             self.logbox.configure(state="disabled")
         self.after(0, w)
 
@@ -267,29 +286,71 @@ class App(tk.Tk):
             self.say(o.strip() + " — يمكنك فصل الكابل الآن."); self.refresh()
         self.bg(job)
 
+    def hw_encoder(self, serial):
+        """يختار مرمّز H.264 الحقيقي في عتاد الهاتف (الأسرع) بدل البرمجي البطيء."""
+        _, o = run([self.scrcpy, "-s", serial, "--list-encoders"], timeout=25)
+        best = None
+        for line in o.splitlines():
+            m = re.search(r"--video-codec=h264\s+--video-encoder='([^']+)'(.*)", line)
+            if not m:
+                continue
+            name, rest = m.group(1), m.group(2).lower()
+            if "(sw)" in rest:
+                continue
+            if "(hw)" in rest or not re.search(r"google|c2\.android|\.sw\.", name.lower()):
+                best = best or name
+        return best
+
     def toggle(self):
         if self.proc and self.proc.poll() is None:
             self.proc.terminate(); return
         s = self.need()
         if not s: return
-        a = [self.scrcpy, "-s", s, "--window-title", "جسر"]
-        if self.size.get() != "الأصلية": a += ["--max-size", self.size.get()]
-        a += ["--video-bit-rate", self.rate.get() + "M", "--max-fps", self.fps.get()]
-        if self.v_off.get(): a.append("--turn-screen-off")
-        if self.v_awake.get(): a.append("--stay-awake")
-        if self.v_top.get(): a.append("--always-on-top")
+        base = [self.scrcpy, "-s", s, "--window-title", "جسر"]
+        if self.size.get() != "الأصلية": base += ["--max-size", self.size.get()]
+        base += ["--video-bit-rate", self.rate.get() + "M", "--max-fps", self.fps.get(), "--stay-awake"]
+        if self.v_noaudio.get(): base.append("--no-audio")
+        if self.v_off.get(): base.append("--turn-screen-off")
         if self.v_rec.get():
             f = out_dir("Videos") / time.strftime("jisr_%Y%m%d_%H%M%S.mp4")
-            a.append(f"--record={f}"); self.log(f"التسجيل إلى: {f}")
-        try:
-            self.proc = subprocess.Popen(a, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=NOWIN)
-        except Exception as e:
-            return self.log(f"فشل التشغيل: {e}")
-        self.btn.configure(text="■  أوقف العرض"); self.status.configure(text="● جارٍ العرض")
-        def reader():
-            for line in self.proc.stdout:
-                self.log(line.decode("utf-8", "replace").rstrip())
-        self.bg(reader)
+            base.append(f"--record={f}"); self.log(f"التسجيل إلى: {f}")
+        hw, low = self.v_hw.get(), self.v_low.get()
+        self.btn.state(["disabled"]); self.btn.configure(text="… جارٍ التشغيل")
+        self.status.configure(text="جارٍ التحضير…")
+        self.bg(lambda: self._launch(s, base, hw, low))
+
+    def _launch(self, s, base, hw, low):
+        flags = NOWIN | (getattr(subprocess, "BELOW_NORMAL_PRIORITY_CLASS", 0) if low else 0)
+        tries = [base]
+        if hw:
+            enc = self.hw_encoder(s)
+            if enc:
+                self.log(f"مرمّز الفيديو (عتاد): {enc}")
+                tries = [base + ["--video-codec=h264", f"--video-encoder={enc}"], base]
+        for a in tries:
+            try:
+                p = subprocess.Popen(a, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, creationflags=flags)
+            except Exception as e:
+                self.log(f"فشل التشغيل: {e}"); break
+            self.proc = p
+            def reader(p=p):
+                for line in p.stdout:
+                    self.log(line.decode("utf-8", "replace").rstrip())
+            self.bg(reader)
+            time.sleep(4)
+            if p.poll() is None:
+                def ok():
+                    self.btn.state(["!disabled"]); self.btn.configure(text="■  أوقف العرض")
+                    self.status.configure(text="● جارٍ العرض")
+                self.after(0, ok)
+                return
+            if a is not tries[-1]:
+                self.log("فشل المرمّز الخاص، أعيد المحاولة بالإعداد الافتراضي…")
+        self.proc = None
+        def fail():
+            self.btn.state(["!disabled"]); self.btn.configure(text="▶  ابدأ عرض الشاشة")
+            self.status.configure(text="جاهز")
+        self.after(0, fail)
 
     def _poll(self):
         if self.proc and self.proc.poll() is not None:
@@ -300,6 +361,7 @@ class App(tk.Tk):
     def diag(self):
         if not self.adb:
             return self.log("⚠ adb غير موجود.")
+        s = self.serial()
         def job():
             self.log("— تشخيص —")
             _, v = run([self.adb, "version"])
@@ -314,6 +376,10 @@ class App(tk.Tk):
                       "ForEach-Object { $_.Status + ' | ' + $_.FriendlyName }")
                 _, p = run(["powershell", "-NoProfile", "-Command", ps], timeout=25)
                 self.log("أجهزة USB التي يراها ويندوز:\n" + (p.strip() or "لا شيء — الكابل للشحن فقط أو الهاتف على وضع الشحن."))
+            if s:
+                _, enc = run([self.scrcpy, "-s", s, "--list-encoders"], timeout=25)
+                ls = [l.strip() for l in enc.splitlines() if "h264" in l.lower()]
+                self.log("مرمّزات الفيديو في هاتفك:\n" + ("\n".join(ls[:6]) or "غير معروفة"))
             self.log("انتهى. صوّر هذا السجل وأرسله للمطور إن استمرت المشكلة.")
         self.bg(job)
 

@@ -116,7 +116,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:v
 <div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a href="#about" data-n="about">عن الموقع</a><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
 </div></nav>
 <div id="v"></div>
-<footer><div class="wrap">© تطبيقاتي — صُنع بشغف</div></footer>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 3</div></footer>
 <script>
 document.documentElement.classList.add("js");
 const CONTACT="mailto:you@example.com";
@@ -126,15 +126,10 @@ const CATS=[
  {id:"tools",name:"أدوات الحاسوب",icon:"🧰",desc:"أدوات صغيرة تسهّل عملك اليومي على الحاسوب."},
  {id:"games",name:"ألعاب وتسلية",icon:"🎮",desc:"ألعاب وإضافات وخوادم للعب مع الأصدقاء."}
 ];
-const APPS=[{
- id:"jisr",cat:"connect",name:"جسر",icon:"📱",ver:"1.0",
- ready:false,url:"https://github.com/jihadhamdi7/jihad/releases/download/jisr/Jisr.exe",repo:"jihadhamdi7/jihad",tag:"jisr",file:"Jisr.exe",dl:null,
- short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",
- feats:[["عرض شاشة الهاتف","على الحاسوب بوضوح عالٍ وسرعة كبيرة"],["كابل أو لاسلكي","اتصال بكابل USB أو عبر شبكة الواي فاي"],["تحكم كامل","بالماوس ولوحة المفاتيح من الحاسوب"],["تسجيل ولقطات","سجّل الشاشة أو التقط صورة بنقرة"],["نقل الملفات","أرسل ملفات من الحاسوب إلى الهاتف"],["خيارات الجودة","اختر الدقة والإطارات وجودة الفيديو"]],
- os:["ويندوز 10 أو 11","هاتف أندرويد 5 أو أحدث","كابل USB أو شبكة واي فاي"],
- steps:[["حمّل الملف وشغّله","ملف واحد Jisr.exe فقط، بدون تثبيت وبدون أي ملفات إضافية."],["فعّل تصحيح USB في هاتفك","الإعدادات ← حول الهاتف ← اضغط «رقم الإصدار» 7 مرات، ثم فعّل «تصحيح USB» من خيارات المطور."],["وصّل الهاتف وشغّل جسر","وافق على نافذة السماح بالتصحيح في الهاتف، ثم اضغط «ابدأ عرض الشاشة»."]],
- faq:[["هل التطبيق مجاني؟","نعم، مجاني بالكامل وبدون إعلانات."],["هل يعمل مع الآيفون؟","ليس حالياً، النسخة الأولى لهواتف أندرويد فقط."],["هل يحتاج إنترنت؟","لا. الاتصال بين الهاتف والحاسوب مباشر ولا تُرسل بياناتك إلى أي مكان."],["لماذا يحذرني ويندوز عند التشغيل؟","البرامج الجديدة غير الموقّعة تظهر فيها هذه الرسالة. اختر «مزيد من المعلومات» ثم «تشغيل على أي حال»."]]
-}];
+/* لإضافة تطبيق: أضف سطراً هنا + أنشئ مجلده وفيه index.html (انسخ jisr/index.html) */
+const APPS=[
+ {id:"jisr",folder:"jisr",cat:"connect",name:"جسر",icon:"📱",short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",repo:"jihadhamdi7/jihad",tag:"jisr",file:"Jisr.exe",ready:false,dl:null}
+];
 const $=s=>document.querySelector(s);
 const cat=id=>CATS.find(c=>c.id===id);
 const num=n=>Number(n).toLocaleString("en");
@@ -142,9 +137,8 @@ const total=()=>APPS.reduce((s,a)=>s+(a.dl||0),0);
 let Q="",CAT="all",keep=false;
 const status=a=>a.ready?'<span class="chip ok">متاح الآن</span>':'<span class="chip">قيد التطوير</span>';
 const dlc=a=>a.ready&&a.dl!=null?`<span class="dlc">⬇ ${num(a.dl)} تحميل</span>`:"";
-const appCard=a=>`<a class="card rv" href="#${a.id}"><div class="ic">${a.icon}</div>${status(a)}<h3>${a.name}</h3><p>${a.short}</p><div class="row2"><span class="more">التفاصيل ←</span>${dlc(a)}</div></a>`;
+const appCard=a=>`<a class="card rv" href="${a.folder}/"><div class="ic">${a.icon}</div>${status(a)}<h3>${a.name}</h3><p>${a.short}</p><div class="row2"><span class="more">التفاصيل ←</span>${dlc(a)}</div></a>`;
 const catCard=c=>{const n=APPS.filter(a=>a.cat===c.id).length;return `<a class="card rv${n?"":" soonc"}" href="#cat-${c.id}"><div class="ic">${c.icon}</div><h3>${c.name}</h3><p>${c.desc}</p><span class="more">${n?n+" تطبيق ←":"قريباً"}</span></a>`};
-const dl=a=>a.ready?`<a class="btn p" href="${a.url}" download>⬇ تحميل ${a.name} لويندوز</a>`:`<span class="btn g off">⏳ التحميل قريباً</span>`;
 const suggest=`<a class="card rv" href="${CONTACT}?subject=اقتراح تطبيق"><div class="ic">💡</div><h3>اقترح تطبيقاً</h3><p>هل تحتاج برنامجاً غير موجود؟ أخبرنا وقد نصنعه.</p><span class="more">أرسل فكرتك ←</span></a>`;
 const resHTML=()=>{const q=Q.trim().toLowerCase();const l=APPS.filter(a=>(CAT==="all"||a.cat===CAT)&&(!q||(a.name+" "+a.short+" "+cat(a.cat).name).toLowerCase().includes(q)));return l.length?l.map(appCard).join(""):`<div class="empty">لا توجد نتائج مطابقة. <a href="${CONTACT}?subject=اقتراح تطبيق">اقترح هذا التطبيق</a></div>`};
 const mock=`<div class="stage rv"><div class="float f1">📱 هاتفك</div><div class="float f2">🖥️ حاسوبك</div><div class="win" id="win"><div class="bar"><i></i><i></i><i></i><span>جسر — هاتفك على حاسوبك</span></div><div class="body"><div class="side"><div class="sk" style="width:80%"></div><div class="sk" style="width:60%"></div><div class="sk" style="width:90%"></div><div class="sk" style="width:50%"></div></div><div class="main"><div class="row"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div><div class="chart"><b></b><b></b><b></b><b></b><b></b><b></b></div></div></div></div></div>`;
@@ -170,13 +164,6 @@ apps:()=>`<div class="wrap page"><div class="eyebrow rv">المكتبة</div><h2
 <div class="chips" id="chips">${["all",...CATS.map(c=>c.id)].map(id=>`<button class="chipb${id===CAT?" on":""}" data-c="${id}">${id==="all"?"الكل":cat(id).icon+" "+cat(id).name}</button>`).join("")}</div>
 <div class="cards" id="res">${resHTML()}</div><div class="cards" style="margin-top:28px">${suggest}</div></div>`,
 cat:id=>{const c=cat(id);if(!c)return V.nf();const l=APPS.filter(a=>a.cat===id);return `<div class="wrap page"><a class="back" href="#home">← الرئيسية</a><div class="eyebrow rv" style="margin-top:18px">${c.icon} نوع التطبيقات</div><h2 class="rv">${c.name}</h2><p class="sub rv">${c.desc}</p><div class="cards">${l.length?l.map(appCard).join(""):'<div class="empty">لا توجد تطبيقات في هذا النوع بعد، لكنها قادمة قريباً.</div>'}${suggest}</div></div>`},
-app:a=>`<div class="wrap page"><a class="back" href="#cat-${a.cat}">← ${cat(a.cat).name}</a>
-<div class="ahead rv"><div class="ic">${a.icon}</div><div>${status(a)}<h1>${a.name}</h1><p class="sub" style="margin:0">${a.short}</p></div></div>
-<div class="cta rv" style="justify-content:flex-start;margin:18px 0 8px">${dl(a)}<span class="pill">النسخة ${a.ver} · مجاني${a.dl!=null&&a.ready?" · ⬇ "+num(a.dl)+" تحميل":""}${a.size?" · "+a.size+" ميجابايت":""}</span></div>
-<section style="padding:36px 0 10px"><h2 class="rv">المزايا</h2><div class="feats">${a.feats.map(f=>`<div class="feat rv"><b>${f[0]}</b><span>${f[1]}</span></div>`).join("")}</div></section>
-<section style="padding:30px 0 10px"><h2 class="rv">كيف تستخدمه؟</h2><div class="steps">${a.steps.map(s=>`<div class="st rv"><div><b>${s[0]}</b><span>${s[1]}</span></div></div>`).join("")}</div></section>
-<section style="padding:30px 0 10px"><h2 class="rv">المتطلبات</h2><div class="req rv">${a.os.map(o=>`<span>${o}</span>`).join("")}</div></section>
-<section style="padding:30px 0 0"><h2 class="rv">أسئلة شائعة</h2>${a.faq.map(f=>`<details class="rv"><summary>${f[0]}</summary><p>${f[1]}</p></details>`).join("")}</section></div>`,
 about:()=>`<div class="wrap page"><div class="eyebrow rv">من نحن</div><h2 class="rv">عن الموقع</h2><p class="sub rv" style="max-width:640px">اكتب هنا نبذة عنك: من أنت، ولماذا تصنع هذه التطبيقات، وما الذي تحلم به. اجعلها قصيرة وصادقة.</p><a class="btn p rv" href="${CONTACT}">تواصل معنا</a></div>`,
 nf:()=>`<div class="wrap page" style="text-align:center"><h2>الصفحة غير موجودة</h2><a class="btn p" href="#home">العودة للرئيسية</a></div>`
 };
@@ -197,15 +184,14 @@ function bind(){
 }
 function route(){
  const h=(location.hash||"#home").slice(1);let html,nav=h;
- const a=APPS.find(x=>x.id===h);
- if(a){html=V.app(a);nav="apps"}else if(h.startsWith("cat-")){html=V.cat(h.slice(4));nav="apps"}else if(["home","apps","about"].includes(h))html=V[h]();else html=V.nf();
+ if(h.startsWith("cat-")){html=V.cat(h.slice(4));nav="apps"}else if(["home","apps","about"].includes(h))html=V[h]();else html=V.nf();
  $("#v").innerHTML=html;if(!keep)scrollTo(0,0);keep=false;
  document.querySelectorAll(".links a[data-n]").forEach(l=>l.classList.toggle("on",l.dataset.n===nav));
  bind();fx();
 }
 addEventListener("hashchange",route);route();
 /* يفحص GitHub تلقائياً: يفعّل زر التحميل ويجلب عدد التحميلات الحقيقي */
-APPS.forEach(a=>{if(!a.repo)return;fetch(`https://api.github.com/repos/${a.repo}/releases/tags/${a.tag}`).then(r=>r.ok?r.json():null).then(j=>{const f=j&&(j.assets||[]).find(x=>x.name===a.file);if(f){a.ready=true;a.url=f.browser_download_url;a.size=Math.round(f.size/1048576);a.dl=f.download_count;keep=true;route()}}).catch(()=>{})});
+APPS.forEach(a=>{if(!a.repo)return;fetch(`https://api.github.com/repos/${a.repo}/releases/tags/${a.tag}`).then(r=>r.ok?r.json():null).then(j=>{const f=j&&(j.assets||[]).find(x=>x.name===a.file);if(f){a.ready=true;a.size=Math.round(f.size/1048576);a.dl=f.download_count;keep=true;route()}}).catch(()=>{})});
 const R=document.documentElement;
 try{const t=localStorage.getItem("th");if(t)R.dataset.theme=t}catch(e){}
 $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;const n=d?"light":"dark";R.dataset.theme=n;try{localStorage.setItem("th",n)}catch(e){}};

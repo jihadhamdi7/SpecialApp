@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ذكي — دردشة وصور بالذكاء الاصطناعي</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--bg:#f4f5ff;--surface:rgba(255,255,255,.85);--text:#12142a;--muted:#5b6080;--line:rgba(80,90,160,.2);--a:#6d4aff;--b:#00a8f0;--user:#e8e6ff;--code:#12142a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07081a;--surface:rgba(255,255,255,.06);--text:#f2f3ff;--muted:#a2a7c9;--line:rgba(255,255,255,.12);--a:#8b6bff;--b:#2fd0ff;--user:#241f55}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'Tajawal',Tahoma,Arial,sans-serif;line-height:1.7}
+#app{display:grid;grid-template-columns:270px 1fr;height:100%}
+#side{border-left:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+.sh{display:flex;justify-content:space-between;align-items:center;padding:14px}
+.sh b{font-size:1.2rem}
+#list{flex:1;overflow:auto;padding:0 8px}
+.cv{display:flex;align-items:center;gap:6px;padding:9px 12px;border-radius:12px;cursor:pointer;color:var(--muted)}
+.cv.on,.cv:hover{background:var(--user);color:var(--text)}
+.cv span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem}
+#quota{padding:12px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.top .t{flex:1;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.back{color:var(--muted);text-decoration:none;font-size:.95rem}
+#menu{display:none}
+.ib{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:6px 12px;cursor:pointer;font:inherit}
+#user{display:flex;align-items:center;gap:8px;font-size:.9rem}
+#user img{width:30px;height:30px;border-radius:50%}
+.btn{border:0;border-radius:12px;padding:10px 20px;font:inherit;font-weight:700;color:#fff;background:linear-gradient(120deg,var(--a),var(--b));cursor:pointer}
+.btn[disabled]{opacity:.6;cursor:default}
+#login{margin:auto;max-width:430px;text-align:center;padding:28px 20px}
+#login h1{margin:0 0 8px;font-size:2rem}
+#login p{color:var(--muted)}
+#gbtn{display:flex;justify-content:center;margin:20px 0}
+.note{font-size:.85rem;color:var(--muted)}
+.warn{background:rgba(255,176,32,.15);border:1px solid rgba(255,176,32,.5);border-radius:12px;padding:10px 14px;margin:12px 0;text-align:right;font-size:.9rem}
+#chat{flex:1;display:flex;flex-direction:column;min-height:0}
+#msgs{flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.m{max-width:min(760px,94%);padding:12px 16px;border-radius:18px;word-wrap:break-word;overflow-wrap:anywhere}
+.m.u{align-self:flex-start;background:var(--user)}
+.m.a{align-self:flex-end;border:1px solid var(--line);background:var(--surface)}
+.m h4{margin:8px 0 4px}.m ul{margin:6px 0;padding:0 20px 0 0}
+.m code{background:rgba(120,120,160,.2);padding:1px 6px;border-radius:6px;direction:ltr;unicode-bidi:embed}
+.code{position:relative;margin:8px 0}
+.code pre{margin:0;background:var(--code);color:#e8e9ff;border-radius:12px;padding:14px;overflow:auto;direction:ltr;text-align:left}
+.code pre code{background:none;padding:0}
+.cp{position:absolute;top:6px;left:6px;font:inherit;font-size:.8rem;border:0;border-radius:8px;padding:2px 10px;cursor:pointer;background:rgba(255,255,255,.15);color:#fff}
+.gen{max-width:100%;border-radius:12px;display:block;margin-bottom:6px}
+.dl,.rg{font-size:.85rem;color:var(--b);text-decoration:none;background:none;border:0;cursor:pointer;font-family:inherit;padding:0;margin-top:6px;display:inline-block}
+.empty{margin:auto;text-align:center;color:var(--muted)}
+.comp{border-top:1px solid var(--line);padding:12px 16px;background:var(--surface)}
+.seg{display:flex;gap:6px;margin-bottom:8px}
+.seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:3px 14px;cursor:pointer;font:inherit}
+.seg button.on{background:linear-gradient(120deg,var(--a),var(--b));color:#fff;border-color:transparent}
+.row{display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;resize:none;max-height:160px;min-height:46px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:14px;padding:11px 14px;font:inherit}
+textarea:focus{outline:2px solid var(--b)}
+@media (max-width:760px){
+ #app{grid-template-columns:1fr}
+ #side{position:fixed;top:0;bottom:0;right:0;width:82%;max-width:310px;transform:translateX(105%);transition:transform .25s;z-index:30}
+ #side.open{transform:none}
+ #menu{display:inline-block}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="side">
+ <div class="sh"><b>✦ ذكي</b><button class="ib" id="new">＋ جديدة</button></div>
+ <div id="list"></div>
+ <div id="quota"></div>
+</aside>
+<main>
+ <header class="top"><button class="ib" id="menu" aria-label="القائمة">☰</button><a class="back" href="../">← الموقع</a><div class="t" id="title">ذكي</div><div id="user"></div></header>
+ <section id="login">
+  <h1>✦ ذكي</h1>
+  <p>دردشة وتوليد صور بالذكاء الاصطناعي. سجّل الدخول بحساب جوجل لتبدأ.</p>
+  <div id="setup" class="warn" hidden>لم يُضبط تسجيل الدخول بعد. ضع Client ID في CONFIG داخل ملف الصفحة (راجع ملف الشرح).</div>
+  <div id="gbtn"></div>
+  <p class="note">محادثاتك تُحفظ في متصفحك فقط، وتُرسل رسائلك إلى مزوّد الذكاء الاصطناعي (جوجل) لتوليد الرد. وفي الباقة المجانية قد تستخدم جوجل المحتوى لتحسين منتجاتها، فلا تكتب معلومات خاصة أو سرية. لكل حساب حد يومي.</p>
+ </section>
+ <section id="chat" hidden>
+  <div id="msgs"></div>
+  <div class="comp">
+   <div class="seg"><button id="m-chat" class="on">💬 دردشة</button><button id="m-image">🎨 صورة</button></div>
+   <div class="row"><textarea id="in" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال، Shift+Enter لسطر جديد)"></textarea><button class="btn" id="send">إرسال</button></div>
+  </div>
+ </section>
+</main>
+</div>
+<script>
+/* ====== أدخل هنا بيانات حسابك (انظر ملف الشرح) ====== */
+const CONFIG={GOOGLE_CLIENT_ID:"75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",API_URL:"https://zaki-api.YOUR-NAME.workers.dev"};
+/* ================================================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function md(src){
+ const blocks=[];
+ let s=esc(src).replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>{blocks.push('<div class="code"><button class="cp" type="button">نسخ</button><pre><code>'+c.replace(/\n$/,"")+'</code></pre></div>');return "\u0000"+(blocks.length-1)+"\u0000"});
+ s=s.replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>")
+  .replace(/^#{1,3}\s+(.+)$/gm,"<h4>$1</h4>")
+  .replace(/^(?:[-*]\s+.+(?:\n|$))+/gm,m=>"<ul>"+m.trim().split("\n").map(l=>"<li>"+l.replace(/^[-*]\s+/,"")+"</li>").join("")+"</ul>")
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+  .replace(/\n/g,"<br>");
+ return s.replace(/\u0000(\d+)\u0000/g,(_,i)=>blocks[i]);
+}
+async function* sseDeltas(reader){
+ const dec=new TextDecoder();let buf="";
+ for(;;){
+  const {done,value}=await reader.read();if(done)break;
+  buf+=dec.decode(value,{stream:true});
+  let i;
+  while((i=buf.indexOf("\n"))>=0){
+   const line=buf.slice(0,i).trim();buf=buf.slice(i+1);
+   if(!line.startsWith("data:"))continue;
+   const d=line.slice(5).trim();if(d==="[DONE]")return;
+   try{const t=JSON.parse(d).choices?.[0]?.delta?.content;if(t)yield t}catch(e){}
+  }
+ }
+}
+/*END-HELPERS*/
+let user=null,token=null,store={convs:[],cur:null},busy=false,ctrl=null,mode="chat",left={chat:null,image:null},noImg=false;
+const cur=()=>store.convs.find(c=>c.id===store.cur);
+const skey=()=>"zaki:"+user.sub;
+function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
+function newConv(){const c={id:"c"+Date.now(),title:"محادثة جديدة",msgs:[]};store.convs.unshift(c);store.cur=c.id;return c}
+function loadStore(){try{store=JSON.parse(localStorage.getItem(skey()))||{convs:[],cur:null}}catch(e){store={convs:[],cur:null}}if(!store.convs.length||!cur())newConv()}
+function saveStore(){try{const c=JSON.parse(JSON.stringify(store));c.convs.forEach(v=>v.msgs.forEach(m=>{if(m.img&&m.img.startsWith("data:"))m.img=null}));localStorage.setItem(skey(),JSON.stringify(c))}catch(e){}}
+function renderList(){$("#list").innerHTML=store.convs.map(c=>`<div class="cv${c.id===store.cur?" on":""}" data-id="${c.id}"><span>${esc(c.title)}</span><button class="x" data-del="${c.id}" title="حذف">✕</button></div>`).join("")}
+function msgHTML(m,last){
+ if(m.role==="user")return `<div class="m u">${esc(m.content).replace(/\n/g,"<br>")}</div>`;
+ const img=m.img?`<div><img class="gen" src="${esc(m.img)}" alt=""><a class="dl" href="${esc(m.img)}" download="zaki.png" target="_blank" rel="noopener">⬇ حفظ الصورة</a></div>`:"";
+ const rg=(last&&!m.img&&!busy&&m.content)?'<div><button class="rg" data-rg="1">↻ إعادة الإجابة</button></div>':"";
+ return `<div class="m a">${img}${md(m.content||"…")}${rg}</div>`;
+}
+function renderMsgs(){
+ const c=cur(),box=$("#msgs");
+ box.innerHTML=c.msgs.length?c.msgs.map((m,i)=>msgHTML(m,i===c.msgs.length-1)).join(""):'<div class="empty"><h2>كيف أساعدك اليوم؟</h2><p>اسأل أي سؤال، أو اختر «🎨 صورة» لتوليد صورة من وصفك.</p></div>';
+ box.scrollTop=box.scrollHeight;$("#title").textContent=c.title;
+}
+function paintLast(a){const els=document.querySelectorAll("#msgs .m.a");const el=els[els.length-1];if(!el)return;const box=$("#msgs"),near=box.scrollHeight-box.scrollTop-box.clientHeight<120;el.innerHTML=md(a.content||"…");if(near)box.scrollTop=box.scrollHeight}
+function renderAll(){renderList();renderMsgs()}
+function showQuota(){$("#quota").textContent=left.chat==null?"":`المتبقي اليوم: 💬 ${left.chat}${noImg?"":" · 🎨 "+left.image}`}
+function setBusy(){$("#send").textContent=busy&&mode==="chat"?"■ إيقاف":"إرسال";$("#send").disabled=busy&&mode==="image"}
+async function api(path,opt={}){return fetch(CONFIG.API_URL+path,{...opt,headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"}})}
+function readQuota(r){const a=r.headers.get("X-Remaining-Chat"),b=r.headers.get("X-Remaining-Image");if(a!=null)left.chat=+a;if(b!=null)left.image=+b;showQuota()}
+async function run(c,kind,text){
+ busy=true;ctrl=new AbortController();setBusy();
+ const a={role:"assistant",content:""};c.msgs.push(a);renderAll();
+ try{
+  if(kind==="image"){
+   const r=await api("/image",{method:"POST",body:JSON.stringify({prompt:text}),signal:ctrl.signal});
+   readQuota(r);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||("خطأ "+r.status));
+   a.img=j.b64?"data:image/png;base64,"+j.b64:j.url;a.content="🎨 "+text;
+  }else{
+   const hist=c.msgs.slice(0,-1).filter(m=>!m.err&&m.content&&!m.img).map(m=>({role:m.role,content:m.content})).slice(-20);
+   const r=await api("/chat",{method:"POST",body:JSON.stringify({messages:hist}),signal:ctrl.signal});
+   readQuota(r);if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||("خطأ "+r.status))}
+   for await(const t of sseDeltas(r.body.getReader())){a.content+=t;paintLast(a)}
+  }
+ }catch(e){
+  if(e.name==="AbortError"){a.content=a.content||"(أُوقف)"}
+  else{a.content=(a.content?a.content+"\n\n":"")+"⚠ "+e.message;a.err=true;if(/سجّل/.test(e.message))relogin()}
+ }
+ busy=false;saveStore();renderAll();setBusy();
+}
+async function send(){
+ if(busy){ctrl&&ctrl.abort();return}
+ if(!token)return;
+ const ta=$("#in"),text=ta.value.trim();if(!text)return;
+ ta.value="";fit();const c=cur();
+ if(!apiReady()){c.msgs.push({role:"user",content:text},{role:"assistant",content:"✔ تسجيل الدخول بجوجل يعمل.\n\nلكن الخادم لم يُضبط بعد، فأكمل الخطوتين الثانية والثالثة من ملف الشرح ثم ضع رابط الخادم في API_URL.",err:true});renderAll();return}
+ c.msgs.push({role:"user",content:text});if(c.title==="محادثة جديدة")c.title=text.slice(0,32);
+ await run(c,mode,text);
+}
+function fit(){const t=$("#in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,160)+"px"}
+function setMode(m){mode=m;$("#m-chat").classList.toggle("on",m==="chat");$("#m-image").classList.toggle("on",m==="image");$("#in").placeholder=m==="image"?"صف الصورة التي تريدها…":"اكتب رسالتك… (Enter للإرسال، Shift+Enter لسطر جديد)";setBusy()}
+function delConv(id){store.convs=store.convs.filter(c=>c.id!==id);if(!store.convs.length||!cur())newConv();saveStore();renderAll()}
+/* ---- تسجيل الدخول بجوجل ---- */
+const configured=()=>!/PUT_YOUR/.test(CONFIG.GOOGLE_CLIENT_ID);
+const apiReady=()=>!/YOUR-NAME/.test(CONFIG.API_URL);
+function showLogin(){token=null;user=null;$("#chat").hidden=true;$("#login").hidden=false;$("#user").innerHTML="";$("#title").textContent="ذكي"}
+function onCred(r){
+ token=r.credential;const p=jwt(token);user={sub:p.sub,name:p.name||"",picture:p.picture||""};
+ try{sessionStorage.setItem("zaki_tok",token)}catch(e){}
+ start();
+}
+function initGoogle(){
+ if(!configured()){$("#setup").hidden=false;return}
+ if(!window.google||!google.accounts){return setTimeout(initGoogle,300)}
+ google.accounts.id.initialize({client_id:CONFIG.GOOGLE_CLIENT_ID,callback:onCred,auto_select:true,cancel_on_tap_outside:false});
+ google.accounts.id.renderButton($("#gbtn"),{theme:"filled_blue",size:"large",text:"signin_with",locale:"ar",shape:"pill"});
+ if(!token)google.accounts.id.prompt();
+}
+function relogin(){showLogin();if(window.google&&google.accounts)google.accounts.id.prompt()}
+function signOut(){try{sessionStorage.removeItem("zaki_tok")}catch(e){}if(window.google&&google.accounts)google.accounts.id.disableAutoSelect();showLogin()}
+async function start(){
+ loadStore();$("#login").hidden=true;$("#chat").hidden=false;
+ $("#user").innerHTML=(user.picture?`<img src="${esc(user.picture)}" alt="">`:"")+`<span>${esc(user.name)}</span><button class="ib" id="out">خروج</button>`;
+ $("#out").onclick=signOut;renderAll();setBusy();
+ if(!apiReady()){$("#quota").textContent="الخادم لم يُضبط بعد";return}
+ try{const r=await api("/me");if(r.ok){const j=await r.json();left={chat:j.chat_left,image:j.image_left};if(j.image_limit===0){noImg=true;$("#m-image").style.display="none";setMode("chat")}showQuota()}else if(r.status===401)relogin()}catch(e){}
+}
+/* ---- الأحداث ---- */
+$("#send").onclick=send;
+$("#in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("#in").addEventListener("input",fit);
+$("#m-chat").onclick=()=>setMode("chat");$("#m-image").onclick=()=>setMode("image");
+$("#new").onclick=()=>{if(!user||busy)return;newConv();saveStore();renderAll();$("#side").classList.remove("open")};
+$("#menu").onclick=()=>$("#side").classList.toggle("open");
+$("#list").onclick=e=>{const d=e.target.dataset.del;if(d){delConv(d);return}const cv=e.target.closest(".cv");if(cv&&!busy){store.cur=cv.dataset.id;saveStore();renderAll();$("#side").classList.remove("open")}};
+$("#msgs").onclick=e=>{
+ if(e.target.classList.contains("cp")){const code=e.target.parentElement.querySelector("code").textContent;navigator.clipboard&&navigator.clipboard.writeText(code);e.target.textContent="تم ✔";setTimeout(()=>e.target.textContent="نسخ",1500)}
+ if(e.target.dataset.rg&&!busy){const c=cur();c.msgs.pop();const u=[...c.msgs].reverse().find(m=>m.role==="user");if(u)run(c,"chat",u.content)}
+};
+/* ---- بداية التشغيل ---- */
+try{const t=sessionStorage.getItem("zaki_tok");if(t){const p=jwt(t);if(p.exp*1000>Date.now()+60000){token=t;user={sub:p.sub,name:p.name||"",picture:p.picture||""};start()}}}catch(e){}
+initGoogle();
+</script>
+</body>
+</html>

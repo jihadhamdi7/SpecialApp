@@ -107,28 +107,34 @@ footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:v
 .soonc{opacity:.7}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:36px 10px}
 .empty a{color:var(--b);font-weight:700}
+.formbox{max-width:640px;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(14px);border-radius:20px;padding:22px}
+.fld{display:block;width:100%;background:transparent;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit;margin-bottom:12px}
+textarea.fld{min-height:130px;resize:vertical}
+.fld:focus{outline:2px solid var(--b);outline-offset:1px}
 </style>
 </head>
 <body>
 <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div></div>
 <nav><div class="wrap">
 <a class="logo" href="#home"><span class="mark">✦</span>تطبيقاتي</a>
-<div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a href="#about" data-n="about">عن الموقع</a><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
+<div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a class="keep" href="ai/" data-n="ai">ذكاء اصطناعي</a><a href="#order" data-n="order">اطلب تطبيقاً</a><a href="#about" data-n="about">عن الموقع</a><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
 </div></nav>
 <div id="v"></div>
-<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 3</div></footer>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 6</div></footer>
 <script>
 document.documentElement.classList.add("js");
 const CONTACT="mailto:you@example.com";
 const CATS=[
  {id:"connect",name:"ربط الأجهزة",icon:"🔗",desc:"أدوات تربط هاتفك بحاسوبك وتجعلهما يعملان معاً."},
+ {id:"ai",name:"الذكاء الاصطناعي",icon:"🤖",desc:"ذكاء اصطناعي مجاني يعمل داخل متصفحك."},
  {id:"media",name:"الصور والفيديو",icon:"🎞️",desc:"أدوات لتحويل الصور والفيديو وضغطها وتحريرها."},
  {id:"tools",name:"أدوات الحاسوب",icon:"🧰",desc:"أدوات صغيرة تسهّل عملك اليومي على الحاسوب."},
  {id:"games",name:"ألعاب وتسلية",icon:"🎮",desc:"ألعاب وإضافات وخوادم للعب مع الأصدقاء."}
 ];
 /* لإضافة تطبيق: أضف سطراً هنا + أنشئ مجلده وفيه index.html (انسخ jisr/index.html) */
 const APPS=[
- {id:"jisr",folder:"jisr",cat:"connect",name:"جسر",icon:"📱",short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",repo:"jihadhamdi7/jihad",tag:"jisr",file:"Jisr.exe",ready:false,dl:null}
+ {id:"jisr",folder:"jisr",cat:"connect",name:"جسر",icon:"📱",short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",repo:"jihadhamdi7/jihad",tag:"jisr",file:"Jisr.exe",ready:false,dl:null},
+ {id:"ai",folder:"ai",cat:"ai",name:"ذكي",icon:"🤖",short:"دردشة بذكاء اصطناعي مجاني يعمل داخل متصفحك، بدون حساب وبدون خادم.",ready:true,dl:null}
 ];
 const $=s=>document.querySelector(s);
 const cat=id=>CATS.find(c=>c.id===id);
@@ -158,12 +164,27 @@ home:()=>`<header class="hero wrap"><span class="pill rv"><span class="dot"></sp
 <div class="st rv"><div><b>اقرأ صفحة التطبيق</b><span>تجد مزاياه وطريقة استخدامه ومتطلباته وأسئلة شائعة.</span></div></div>
 <div class="st rv"><div><b>حمّل وشغّل</b><span>اضغط زر التحميل ثم شغّل الملف بنقرتين.</span></div></div></div></section>
 <section class="wrap"><div class="eyebrow rv">التصنيفات</div><h2 class="rv">أنواع التطبيقات</h2><div class="cards">${CATS.map(catCard).join("")}</div></section>
-<section class="wrap"><div class="eyebrow rv">الجديد</div><h2 class="rv">أحدث التطبيقات</h2><div class="cards">${APPS.map(appCard).join("")}</div></section>`,
+<section class="wrap"><div class="eyebrow rv">الجديد</div><h2 class="rv">أحدث التطبيقات</h2><div class="cards">${APPS.map(appCard).join("")}</div></section>
+<section class="wrap"><div class="card rv" style="text-align:center;padding:40px 24px"><div class="eyebrow">خدمة مدفوعة</div><h2>عندك فكرة تطبيق؟</h2><p class="sub" style="margin:0 auto 22px">نصنعه لك كتطبيق ويندوز بملف واحد وواجهة عربية أنيقة.</p><a class="btn p" href="#order">اطلب تطبيقاً ←</a></div></section>`,
 apps:()=>`<div class="wrap page"><div class="eyebrow rv">المكتبة</div><h2 class="rv">كل التطبيقات</h2><p class="sub rv">ابحث بالاسم أو اختر نوعاً.</p>
 <div class="search rv" style="margin:0"><span>🔍</span><input id="q" placeholder="ابحث عن تطبيق…" autocomplete="off"></div>
 <div class="chips" id="chips">${["all",...CATS.map(c=>c.id)].map(id=>`<button class="chipb${id===CAT?" on":""}" data-c="${id}">${id==="all"?"الكل":cat(id).icon+" "+cat(id).name}</button>`).join("")}</div>
 <div class="cards" id="res">${resHTML()}</div><div class="cards" style="margin-top:28px">${suggest}</div></div>`,
 cat:id=>{const c=cat(id);if(!c)return V.nf();const l=APPS.filter(a=>a.cat===id);return `<div class="wrap page"><a class="back" href="#home">← الرئيسية</a><div class="eyebrow rv" style="margin-top:18px">${c.icon} نوع التطبيقات</div><h2 class="rv">${c.name}</h2><p class="sub rv">${c.desc}</p><div class="cards">${l.length?l.map(appCard).join(""):'<div class="empty">لا توجد تطبيقات في هذا النوع بعد، لكنها قادمة قريباً.</div>'}${suggest}</div></div>`},
+order:()=>`<div class="wrap page"><div class="eyebrow rv">خدمة مدفوعة</div><h2 class="rv">اطلب تطبيقاً مخصصاً</h2>
+<p class="sub rv" style="max-width:640px">عندك فكرة برنامج لعملك أو دراستك أو مشروعك؟ نصنعه لك كتطبيق ويندوز بملف واحد وواجهة عربية أنيقة، ونشرح لك طريقة استخدامه.</p>
+<div class="cards"><div class="card rv"><div class="ic">🛠️</div><h3>أدوات أتمتة وتنظيم</h3><p>برامج تختصر عليك مهام متكررة: ترتيب ملفات، تحويل، معالجة بيانات.</p></div>
+<div class="card rv"><div class="ic">🔗</div><h3>ربط الأجهزة</h3><p>برامج تربط الهاتف بالحاسوب أو تنقل البيانات بينهما، مثل تطبيق جسر.</p></div>
+<div class="card rv"><div class="ic">💼</div><h3>برامج لعملك</h3><p>أداة خاصة بنشاطك التجاري أو دراستك بالشكل الذي تحتاجه تماماً.</p></div></div>
+<h2 class="rv" style="margin-top:48px">كيف يتم الطلب؟</h2><div class="steps">
+<div class="st rv"><div><b>اكتب فكرتك</b><span>صف ما تريده بجملة أو فقرة، وكلما كانت أوضح كان العرض أدق.</span></div></div>
+<div class="st rv"><div><b>نتفق على التفاصيل</b><span>نحدد الميزات والسعر والمدة وطريقة الدفع قبل أي عمل، والسعر يختلف حسب المشروع.</span></div></div>
+<div class="st rv"><div><b>تستلم تطبيقك</b><span>ملف واحد جاهز للتشغيل مع شرح الاستخدام.</span></div></div></div>
+<h2 class="rv" style="margin-top:48px">أرسل طلبك</h2>
+<div class="formbox rv"><input class="fld" id="o-name" placeholder="اسمك"><input class="fld" id="o-contact" placeholder="كيف نتواصل معك؟ (بريد أو واتساب أو تيليجرام)">
+<textarea class="fld" id="o-idea" placeholder="ما فكرة التطبيق؟ ماذا تريده أن يفعل؟"></textarea>
+<input class="fld" id="o-budget" placeholder="الميزانية التقريبية (اختياري)"><input class="fld" id="o-time" placeholder="المدة المطلوبة (اختياري)">
+<button class="btn p" id="ob" type="button">أرسل الطلب ←</button><p class="sub" id="o-msg" style="margin:12px 0 0"></p></div></div>`,
 about:()=>`<div class="wrap page"><div class="eyebrow rv">من نحن</div><h2 class="rv">عن الموقع</h2><p class="sub rv" style="max-width:640px">اكتب هنا نبذة عنك: من أنت، ولماذا تصنع هذه التطبيقات، وما الذي تحلم به. اجعلها قصيرة وصادقة.</p><a class="btn p rv" href="${CONTACT}">تواصل معنا</a></div>`,
 nf:()=>`<div class="wrap page" style="text-align:center"><h2>الصفحة غير موجودة</h2><a class="btn p" href="#home">العودة للرئيسية</a></div>`
 };
@@ -172,7 +193,15 @@ function fx(){
  document.querySelectorAll(".rv:not(.seen)").forEach((el,i)=>{el.classList.add("seen");el.style.transitionDelay=(i%4)*60+"ms";io.observe(el)});
  document.querySelectorAll(".card:not(.g)").forEach(c=>{c.classList.add("g");c.addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();c.style.setProperty("--mx",e.clientX-r.left+"px");c.style.setProperty("--my",e.clientY-r.top+"px")})});
 }
+function sendOrder(){
+ const v=id=>($(id).value||"").trim();
+ if(!v("#o-idea")){$("#o-msg").textContent="اكتب فكرة التطبيق أولاً.";return}
+ const body="الاسم: "+v("#o-name")+"\nطريقة التواصل: "+v("#o-contact")+"\nالميزانية: "+v("#o-budget")+"\nالمدة: "+v("#o-time")+"\n\nالفكرة:\n"+v("#o-idea");
+ $("#o-msg").textContent="يفتح بريدك الآن لإرسال الطلب…";
+ location.href=CONTACT+"?subject="+encodeURIComponent("طلب تطبيق مخصص")+"&body="+encodeURIComponent(body);
+}
 function bind(){
+ const ob=$("#ob");if(ob)ob.onclick=sendOrder;
  const hq=$("#hq");
  if(hq)hq.oninput=e=>{Q=e.target.value;CAT="all";if(Q.trim())location.hash="#apps"};
  const q=$("#q");
@@ -184,7 +213,7 @@ function bind(){
 }
 function route(){
  const h=(location.hash||"#home").slice(1);let html,nav=h;
- if(h.startsWith("cat-")){html=V.cat(h.slice(4));nav="apps"}else if(["home","apps","about"].includes(h))html=V[h]();else html=V.nf();
+ if(h.startsWith("cat-")){html=V.cat(h.slice(4));nav="apps"}else if(["home","apps","order","about"].includes(h))html=V[h]();else html=V.nf();
  $("#v").innerHTML=html;if(!keep)scrollTo(0,0);keep=false;
  document.querySelectorAll(".links a[data-n]").forEach(l=>l.classList.toggle("on",l.dataset.n===nav));
  bind();fx();

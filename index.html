@@ -127,7 +127,7 @@ textarea.fld{min-height:130px;resize:vertical}
 <div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a class="keep" href="ai/" data-n="ai">SPA.AI</a><a href="#order" data-n="order">اطلب تطبيقاً</a><a href="#about" data-n="about">عن الموقع</a><span id="auth"></span><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
 </div></nav>
 <div id="v"></div>
-<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 8</div></footer>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 10</div></footer>
 <script>
 document.documentElement.classList.add("js");
 const CONTACT="mailto:you@example.com";
@@ -141,7 +141,7 @@ const CATS=[
 /* لإضافة تطبيق: أضف سطراً هنا + أنشئ مجلده وفيه index.html (انسخ jisr/index.html) */
 const APPS=[
  {id:"jisr",folder:"jisr",cat:"connect",name:"جسر",icon:"📱",short:"اعرض شاشة هاتفك على الحاسوب وتحكم بها بالماوس ولوحة المفاتيح.",repo:"jihadhamdi7/jihad",tag:"jisr",file:"Jisr.exe",ready:false,dl:null},
- {id:"ai",folder:"ai",cat:"ai",name:"SPA.AI",icon:"🤖",short:"مساعد ذكي تجريبي: يجيب عن تطبيقاتنا ويحسب ويحوّل الوحدات. سجّل بحساب جوجل وابدأ.",ready:true,dl:null}
+ {id:"ai",folder:"ai",cat:"ai",name:"SPA.AI",icon:"🤖",short:"مساعد ذكي تجريبي: يجيب عن تطبيقاتنا ويرسم لك صوراً من وصفك. سجّل بحساب جوجل وابدأ.",ready:true,dl:null}
 ];
 const $=s=>document.querySelector(s);
 const cat=id=>CATS.find(c=>c.id===id);
@@ -227,7 +227,7 @@ function route(){
 }
 addEventListener("hashchange",route);route();
 /* يفحص GitHub تلقائياً: يفعّل زر التحميل ويجلب عدد التحميلات الحقيقي */
-APPS.forEach(a=>{if(!a.repo)return;fetch(`https://api.github.com/repos/${a.repo}/releases/tags/${a.tag}`).then(r=>r.ok?r.json():null).then(j=>{const f=j&&(j.assets||[]).find(x=>x.name===a.file);if(f){a.ready=true;a.size=Math.round(f.size/1048576);a.dl=f.download_count;keep=true;route()}}).catch(()=>{})});
+APPS.forEach(a=>{if(!a.repo)return;fetch(`https://api.github.com/repos/${a.repo}/releases/tags/${a.tag}`).then(r=>r.ok?r.json():null).then(j=>{const f=j&&(j.assets||[]).find(x=>x.name===a.file);if(f){a.ready=true;a.size=Math.round(f.size/1048576);a.dl=(+((j.body||"").match(/base=(\d+)/)||[])[1]||0)+f.download_count;keep=true;route()}}).catch(()=>{})});
 const R=document.documentElement;
 try{const t=localStorage.getItem("th");if(t)R.dataset.theme=t}catch(e){}
 $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;const n=d?"light":"dark";R.dataset.theme=n;try{localStorage.setItem("th",n)}catch(e){}};

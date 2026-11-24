@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>تطبيقاتي — برامج مصنوعة بشغف</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{--bg:#f4f5ff;--surface:rgba(255,255,255,.72);--text:#12142a;--muted:#5b6080;--line:rgba(80,90,160,.18);--a:#6d4aff;--b:#00a8f0;--c:#ff4fa3;--glow:.35;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -111,16 +112,22 @@ footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:v
 .fld{display:block;width:100%;background:transparent;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:12px 14px;font:inherit;margin-bottom:12px}
 textarea.fld{min-height:130px;resize:vertical}
 .fld:focus{outline:2px solid var(--b);outline-offset:1px}
+[hidden]{display:none!important}
+#auth{display:flex;align-items:center;gap:8px;min-height:38px}
+#auth .au{display:flex;align-items:center;gap:8px;font-size:.9rem}
+#auth .au img{width:30px;height:30px;border-radius:50%}
+#auth button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:4px 10px;cursor:pointer;font:inherit;font-size:.85rem}
+@media (max-width:640px){#auth .au>span{display:none}}
 </style>
 </head>
 <body>
 <div class="bg"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="grid-bg"></div></div>
 <nav><div class="wrap">
 <a class="logo" href="#home"><span class="mark">✦</span>تطبيقاتي</a>
-<div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a class="keep" href="ai/" data-n="ai">SPA.AI</a><a href="#order" data-n="order">اطلب تطبيقاً</a><a href="#about" data-n="about">عن الموقع</a><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
+<div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a class="keep" href="ai/" data-n="ai">SPA.AI</a><a href="#order" data-n="order">اطلب تطبيقاً</a><a href="#about" data-n="about">عن الموقع</a><span id="auth"></span><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
 </div></nav>
 <div id="v"></div>
-<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 7</div></footer>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 8</div></footer>
 <script>
 document.documentElement.classList.add("js");
 const CONTACT="mailto:you@example.com";
@@ -224,6 +231,46 @@ APPS.forEach(a=>{if(!a.repo)return;fetch(`https://api.github.com/repos/${a.repo}
 const R=document.documentElement;
 try{const t=localStorage.getItem("th");if(t)R.dataset.theme=t}catch(e){}
 $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;const n=d?"light":"dark";R.dataset.theme=n;try{localStorage.setItem("th",n)}catch(e){}};
+</script>
+<script>
+(function(){
+ const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user";
+ const pending=[];let ok=false;
+ const get=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}};
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
+ const emit=()=>window.dispatchEvent(new Event("spa-auth"));
+ function signOut(){try{localStorage.removeItem(KEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
+ function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));emit()}catch(e){}}
+ function help(){alert("تعذر عرض زر جوجل.\nعنوان موقعك كما يراه جوجل:\n"+location.origin+"\n\nتحقق من الآتي:\n١) أن هذا العنوان مكتوب بالضبط في Authorized JavaScript origins (بدون / في آخره).\n٢) أن التطبيق منشور: Google Auth Platform ← Audience ← Publish app.\n٣) انتظر 5 دقائق بعد أي تعديل، وجرّب نافذة التصفح الخفي، وأوقف مانع الإعلانات.")}
+ function warn(el,txt){el.innerHTML='<button class="warnb" type="button">'+txt+'</button>';el.firstChild.onclick=help}
+ function watch(el){setTimeout(()=>{if(el&&el.children.length===0)warn(el,"⚠ مشكلة بتسجيل الدخول")},6000)}
+ function mount(el,opts){if(!el)return;if(ok){google.accounts.id.renderButton(el,opts);watch(el)}else pending.push([el,opts])}
+ function init(n){
+  if(window.google&&google.accounts&&google.accounts.id){
+   google.accounts.id.initialize({client_id:CID,callback:cb,auto_select:true,cancel_on_tap_outside:false});
+   ok=true;pending.splice(0).forEach(p=>mount(p[0],p[1]));
+   if(!get()){try{google.accounts.id.prompt()}catch(e){}}
+   return;
+  }
+  if(n>80){pending.splice(0).forEach(p=>warn(p[0],"⚠ تعذر تحميل جوجل"));return}
+  setTimeout(()=>init(n+1),300);
+ }
+ function renderNav(){
+  const box=document.getElementById("auth");if(!box)return;const u=get();
+  if(u){
+   box.innerHTML='<span class="au">'+(u.picture?'<img src="'+esc(u.picture)+'" alt="" referrerpolicy="no-referrer">':"")+'<span>'+esc((u.name||"").split(" ")[0])+'</span><button type="button" id="so">خروج</button></span>';
+   document.getElementById("so").onclick=signOut;
+  }else{
+   box.innerHTML='<span id="gnav"></span>';
+   mount(document.getElementById("gnav"),{type:"icon",shape:"circle",theme:"outline",size:"medium"});
+  }
+ }
+ window.addEventListener("spa-auth",renderNav);
+ window.addEventListener("storage",e=>{if(e.key===KEY)renderNav()});
+ window.SPA_AUTH={get,signOut,mount,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
+ renderNav();init(0);
+})();
 </script>
 </body>
 </html>

@@ -62,18 +62,25 @@ textarea:focus{outline:2px solid var(--b)}
  #side.open{transform:none}
  #menu{display:inline-block}
 }
+[hidden]{display:none!important}
+#auth{display:flex;align-items:center;gap:8px;min-height:38px}
+#auth .au{display:flex;align-items:center;gap:8px;font-size:.9rem}
+#auth .au img{width:30px;height:30px;border-radius:50%}
+#auth button{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:10px;padding:4px 10px;cursor:pointer;font:inherit;font-size:.85rem}
+@media (max-width:640px){#auth .au>span{display:none}}
 
 #login{margin:auto;max-width:430px;text-align:center;padding:28px 20px}
 #login h1{margin:0 0 8px;font-size:2.2rem}
 #login p{color:var(--muted)}
-#gbtn{display:flex;justify-content:center;margin:20px 0}
-#user{display:flex;align-items:center;gap:8px;font-size:.9rem}
-#user img{width:30px;height:30px;border-radius:50%}
+#gbtn{display:flex;justify-content:center;margin:20px 0;min-height:44px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .chip{border:1px solid var(--line);background:transparent;color:var(--text);border-radius:99px;padding:4px 14px;cursor:pointer;font:inherit;font-size:.9rem}
 .chip:hover{background:var(--user)}
 .empty .chips{justify-content:center}
 .logo{font-weight:900;letter-spacing:.5px}
+#unk{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+#unk .ib{padding:2px 10px;font-size:.8rem}
+.warnb{border-color:rgba(255,176,32,.6)!important}
 </style>
 </head>
 <body>
@@ -81,15 +88,18 @@ textarea:focus{outline:2px solid var(--b)}
 <aside id="side">
  <div class="sh"><b class="logo">✦ SPA.AI</b><button class="ib" id="new">＋ جديدة</button></div>
  <div id="list"></div>
- <div id="quota">النسخة 0 · تجريبية</div>
+ <div id="quota">النسخة 0 · تجريبية
+  <div id="unk" hidden><span id="unkn"></span><button class="ib" id="unkcopy" type="button">نسخ</button><button class="ib" id="unkclr" type="button">مسح</button></div>
+ </div>
 </aside>
 <main>
- <header class="top"><button class="ib" id="menu" aria-label="القائمة">☰</button><a class="back" href="../">← الموقع</a><div class="t" id="title">SPA.AI</div><div id="user"></div></header>
+ <header class="top"><button class="ib" id="menu" aria-label="القائمة">☰</button><a class="back" href="../">← الموقع</a><div class="t" id="title">SPA.AI</div><div id="auth"></div></header>
  <section id="login">
   <h1 class="logo">✦ SPA.AI</h1>
-  <p>مساعدك الذكي. سجّل الدخول بحساب جوجل وابدأ، بدون تحميل وبدون إعدادات.</p>
+  <p>مساعدك الذكي. سجّل الدخول بحساب جوجل وابدأ، بدون تحميل وبدون إعدادات. وإن سجّلت دخولك من أي صفحة في الموقع فسيفتح لك المساعد تلقائياً.</p>
   <div id="gbtn"></div>
   <p class="note">النسخة 0 تجريبية: تجيب عن أسئلة تطبيقاتنا، وتحسب، وتحوّل الوحدات، وتخبرك بالتاريخ والوقت. محادثاتك تُحفظ في متصفحك فقط.</p>
+  <p class="note" id="orig"></p>
  </section>
  <section id="chat" hidden>
   <div id="msgs"></div>
@@ -98,7 +108,47 @@ textarea:focus{outline:2px solid var(--b)}
 </main>
 </div>
 <script>
-const CONFIG={GOOGLE_CLIENT_ID:"75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com"};
+(function(){
+ const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user";
+ const pending=[];let ok=false;
+ const get=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}};
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
+ const emit=()=>window.dispatchEvent(new Event("spa-auth"));
+ function signOut(){try{localStorage.removeItem(KEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
+ function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));emit()}catch(e){}}
+ function help(){alert("تعذر عرض زر جوجل.\nعنوان موقعك كما يراه جوجل:\n"+location.origin+"\n\nتحقق من الآتي:\n١) أن هذا العنوان مكتوب بالضبط في Authorized JavaScript origins (بدون / في آخره).\n٢) أن التطبيق منشور: Google Auth Platform ← Audience ← Publish app.\n٣) انتظر 5 دقائق بعد أي تعديل، وجرّب نافذة التصفح الخفي، وأوقف مانع الإعلانات.")}
+ function warn(el,txt){el.innerHTML='<button class="warnb" type="button">'+txt+'</button>';el.firstChild.onclick=help}
+ function watch(el){setTimeout(()=>{if(el&&el.children.length===0)warn(el,"⚠ مشكلة بتسجيل الدخول")},6000)}
+ function mount(el,opts){if(!el)return;if(ok){google.accounts.id.renderButton(el,opts);watch(el)}else pending.push([el,opts])}
+ function init(n){
+  if(window.google&&google.accounts&&google.accounts.id){
+   google.accounts.id.initialize({client_id:CID,callback:cb,auto_select:true,cancel_on_tap_outside:false});
+   ok=true;pending.splice(0).forEach(p=>mount(p[0],p[1]));
+   if(!get()){try{google.accounts.id.prompt()}catch(e){}}
+   return;
+  }
+  if(n>80){pending.splice(0).forEach(p=>warn(p[0],"⚠ تعذر تحميل جوجل"));return}
+  setTimeout(()=>init(n+1),300);
+ }
+ function renderNav(){
+  const box=document.getElementById("auth");if(!box)return;const u=get();
+  if(u){
+   box.innerHTML='<span class="au">'+(u.picture?'<img src="'+esc(u.picture)+'" alt="" referrerpolicy="no-referrer">':"")+'<span>'+esc((u.name||"").split(" ")[0])+'</span><button type="button" id="so">خروج</button></span>';
+   document.getElementById("so").onclick=signOut;
+  }else{
+   box.innerHTML='<span id="gnav"></span>';
+   mount(document.getElementById("gnav"),{type:"icon",shape:"circle",theme:"outline",size:"medium"});
+  }
+ }
+ window.addEventListener("spa-auth",renderNav);
+ window.addEventListener("storage",e=>{if(e.key===KEY)renderNav()});
+ window.SPA_AUTH={get,signOut,mount,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
+ renderNav();init(0);
+})();
+
+</script>
+<script>
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtMsg=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
@@ -155,19 +205,47 @@ const KB=[
  a:"أنا نموذج أولي تجريبي: أعمل بقواعد وقاعدة معرفة عن هذا الموقع وأدوات حساب وتحويل، ولست نموذجاً لغوياً كبيراً مثل ChatGPT. لذلك أخطئ أحياناً ولا أفهم كل سؤال، وسأتحسن مع الوقت."},
 {id:"contact",q:["كيف اتواصل معكم","رقم التواصل","بريد التواصل","اين اراسلكم","contact","طريقة التواصل"],
  a:"أسهل طريقة: صفحة «اطلب تطبيقاً» في الموقع، اكتب رسالتك وطريقة تواصلك."},
+{id:"jisr_rec",q:["كيف اسجل الشاشة","تسجيل فيديو للشاشة","كيف التقط لقطة شاشة","لقطه شاشه من جسر","screenshot","record screen"],
+ a:"في جسر: فعّل «تسجيل فيديو» قبل البدء فيُحفظ الفيديو في مجلد Videos\\Jisr، وزر «📷 لقطة» يحفظ صورة في Pictures\\Jisr."},
+{id:"jisr_files",q:["كيف انقل ملفات من الحاسوب الى الهاتف","ارسال ملفات للهاتف","نقل الملفات","رفع ملف للهاتف","transfer files"],
+ a:"اضغط «📁 إرسال ملفات» في جسر واختر الملفات، فتُرسَل إلى مجلد Download في الهاتف."},
+{id:"jisr_audio",q:["الصوت لا يعمل في جسر","هل ينقل جسر الصوت","كيف اسمع صوت الهاتف على الحاسوب","بدون صوت","audio sound"],
+ a:"الصوت اختياري: ألغِ تفعيل «بدون صوت» (ينقل الصوت من أندرويد 11 وما بعده). وإبقاؤه مفعّلاً أخف على الهاتف في الألعاب."},
+{id:"jisr_nodl",q:["زر التحميل لا يعمل","التحميل قريبا","لماذا لا استطيع التحميل","الزر معطل","لا يوجد زر تحميل","الملف غير متاح"],
+ a:"يتفعّل زر التحميل تلقائياً عندما يكون ملف جسر جاهزاً. فإن بقي مكتوباً «التحميل قريباً» فالنسخة لم تُنشر بعد، أو حدّث الصفحة بـ Ctrl+F5."},
+{id:"jisr_pair",q:["فشل الاقتران","الاقتران لا ينجح","الرمز لا يعمل","لم يجد الهاتف تلقائيا","pairing failed"],
+ a:"الرمز ومنفذ الاقتران يتغيران كل مرة: أغلق نافذة الاقتران في الهاتف وافتحها من جديد، وتأكد أن الهاتف والحاسوب على نفس الواي فاي، ثم أعد المحاولة. وإن لم يُكتشف الهاتف فاكتب العناوين يدوياً في أسفل نافذة اللاسلكي."},
 ];
 const DF={};
 const DOCS=KB.map(e=>{const t=toks(e.q.join(" "));const tf={};t.forEach(w=>tf[w]=(tf[w]||0)+1);Object.keys(tf).forEach(w=>DF[w]=(DF[w]||0)+1);return {e,tf}});
 const idf=w=>Math.log(1+KB.length/(1+(DF[w]||0)));
 function vec(tf){const v={};let n=0;for(const w in tf){const x=(1+Math.log(tf[w]))*idf(w);v[w]=x;n+=x*x}return {v,n:Math.sqrt(n)||1}}
 DOCS.forEach(d=>d.vec=vec(d.tf));
-function retrieve(text){
- const t=toks(text);if(!t.length)return null;
- const tf={};t.forEach(w=>tf[w]=(tf[w]||0)+1);
- const q=vec(tf);let best=null,bs=0;
- for(const d of DOCS){let dot=0;for(const w in q.v)if(d.vec.v[w])dot+=q.v[w]*d.vec.v[w];const s=dot/(q.n*d.vec.n);if(s>bs){bs=s;best=d.e}}
- return bs>=0.25?{e:best,score:bs}:null;
+const VOCAB=Object.keys(DF);
+function lev(a,b,max){
+ if(Math.abs(a.length-b.length)>max)return max+1;
+ let prev=Array.from({length:b.length+1},(_,j)=>j);
+ for(let i=1;i<=a.length;i++){const cur=[i];let mn=i;
+  for(let j=1;j<=b.length;j++){const v=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));cur[j]=v;if(v<mn)mn=v}
+  prev=cur;if(mn>max)return max+1}
+ return prev[b.length];
 }
+function correct(w){
+ if(DF[w]||w.length<4)return w;
+ const c=w.replace(/(.)\1+/g,"$1");if(c!==w&&DF[c])return c;
+ if(w.length<5)return w;
+ const max=w.length>=8?2:1;let best=w,bd=max+1,bf=-1;
+ for(const v of VOCAB){if(v.length<4)continue;const d=lev(w,v,max);if(d<bd||(d===bd&&DF[v]>bf)){best=v;bd=d;bf=DF[v]}}
+ return bd<=max?best:w;
+}
+function rank(text){
+ const t=toks(text).map(correct);if(!t.length)return [];
+ const tf={};t.forEach(w=>tf[w]=(tf[w]||0)+1);
+ const q=vec(tf);let tot=0;for(const w in q.v)tot+=idf(w);
+ return DOCS.map(d=>{let dot=0,hit=0;for(const w in q.v)if(d.vec.v[w]){dot+=q.v[w]*d.vec.v[w];hit+=idf(w)}const sc=dot/(q.n*d.vec.n),cv=tot?hit/tot:0;return {e:d.e,score:sc,cov:cv,adj:sc*cv}}).sort((a,b)=>b.adj-a.adj);
+}
+const sure=(r,r2)=>r&&r.score>=0.25&&r.cov>=0.5&&(!r2||r.adj-r2.adj>=0.06);
+function retrieve(text){const r=rank(text);return r.length&&sure(r[0],r[1])?r[0]:null}
 function evalMath(expr){
  const tk=expr.match(/\d+(?:\.\d+)?|[+\-*/^()]/g)||[];let i=0;
  const peek=()=>tk[i],next=()=>tk[i++];
@@ -244,32 +322,47 @@ function createEngine(){
   if(/^(من انت|مين انت|ما اسمك|ما هو اسمك|من تكون|عرف نفسك|عرف بنفسك)/.test(t))return {text:KB.find(e=>e.id==="who").a};
   const r=mathAnswer(raw)||convAnswer(raw)||dateTimeAnswer(raw)||randomAnswer(raw,rnd);
   if(r)return {text:r};
-  const k=retrieve(raw);
-  if(k)return {text:k.e.a};
-  return {text:"لا أعرف الإجابة عن هذا بعد 🤔 أنا نموذج تجريبي أتعلم. جرّب أن تسألني عن:",chips:FALLBACK_CHIPS};
+  const rk=rank(raw);
+  if(sure(rk[0],rk[1]))return {text:rk[0].e.a};
+  const near=rk.filter(x=>x.adj>=0.12&&x.cov>=0.5).slice(0,3);
+  if(near.length)return {text:"لم أفهم سؤالك تماماً. هل تقصد أحد هذه؟",chips:near.map(x=>x.e.q[0]+"؟"),unknown:true};
+  return {text:"لا أعرف الإجابة عن هذا بعد 🤔 أنا نموذج تجريبي أتعلم. جرّب أن تسألني عن:",chips:FALLBACK_CHIPS,unknown:true};
  }};
 }
 /*END-ENGINE*/
 
 const engine=createEngine();
-let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false;
+let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false,guest=false;
 const cur=()=>store.convs.find(c=>c.id===store.cur);
 const skey=()=>"spa:"+user.sub;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
 function newConv(){const c={id:"c"+Date.now(),title:"محادثة جديدة",msgs:[]};store.convs.unshift(c);store.cur=c.id;return c}
-function loadStore(){try{store=JSON.parse(localStorage.getItem(skey()))||{convs:[],cur:null,mem:{}}}catch(e){store={convs:[],cur:null,mem:{}}}store.mem=store.mem||{};if(!store.mem.name&&user.name)store.mem.name=user.name.split(" ")[0];if(!store.convs.length||!cur())newConv()}
+function loadStore(){
+ try{store=JSON.parse(localStorage.getItem(skey()))||{convs:[],cur:null,mem:{}}}catch(e){store={convs:[],cur:null,mem:{}}}
+ store.mem=store.mem||{};if(!store.mem.name&&user.name)store.mem.name=user.name.split(" ")[0];
+ if(!store.convs.length||!cur())newConv();
+}
 function saveStore(){try{localStorage.setItem(skey(),JSON.stringify(store))}catch(e){}}
 function renderList(){$("#list").innerHTML=store.convs.map(c=>`<div class="cv${c.id===store.cur?" on":""}" data-id="${c.id}"><span>${esc(c.title)}</span><button class="x" data-del="${c.id}" title="حذف">✕</button></div>`).join("")}
 const chipsHTML=a=>a&&a.length?`<div class="chips">${a.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`:"";
-function msgHTML(m){return m.role==="user"?`<div class="m u">${esc(m.content).replace(/\n/g,"<br>")}</div>`:`<div class="m a">${fmtMsg(m.content||"…")}${chipsHTML(m.chips)}</div>`}
+function msgHTML(m,i){
+ if(m.role==="user")return `<div class="m u">${esc(m.content).replace(/\n/g,"<br>")}</div>`;
+ const cp=m.content&&!m.typing?`<div><button class="rg" data-copy="${i}">📋 نسخ</button></div>`:"";
+ return `<div class="m a">${fmtMsg(m.content||"…")}${chipsHTML(m.chips)}${cp}</div>`;
+}
 function renderMsgs(){
  const c=cur(),box=$("#msgs"),n=store.mem.name?" يا "+esc(store.mem.name):"";
  box.innerHTML=c.msgs.length?c.msgs.map(msgHTML).join(""):`<div class="empty"><h2>أهلاً${n}! أنا SPA.AI 👋</h2><p>اسألني عن تطبيقاتنا، أو اطلب حساباً أو تحويلاً.</p>${chipsHTML(FALLBACK_CHIPS)}</div>`;
  box.scrollTop=box.scrollHeight;$("#title").textContent=c.title;
 }
 function paintLast(a){const els=document.querySelectorAll("#msgs .m.a");const el=els[els.length-1];if(el){el.innerHTML=fmtMsg(a.content||"…");const b=$("#msgs");b.scrollTop=b.scrollHeight}}
-function renderAll(){renderList();renderMsgs()}
+/* ---- أسئلة لم يفهمها المساعد (لتطويره لاحقاً) ---- */
+const UKEY="spa_unknown";
+function unknownList(){try{return JSON.parse(localStorage.getItem(UKEY))||[]}catch(e){return[]}}
+function logUnknown(q){const l=unknownList();if(!l.includes(q)){l.push(q);try{localStorage.setItem(UKEY,JSON.stringify(l.slice(-200)))}catch(e){}}renderUnknown()}
+function renderUnknown(){const n=unknownList().length;$("#unk").hidden=!n;$("#unkn").textContent=n?"أسئلة لم أفهمها: "+n:""}
+function copyText(txt){try{if(navigator.clipboard){navigator.clipboard.writeText(txt);return}}catch(e){}const t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand("copy")}catch(e){}t.remove()}
+function renderAll(){renderList();renderMsgs();renderUnknown()}
 function setBusy(){$("#send").textContent=busy?"■ إيقاف":"إرسال"}
 function fit(){const t=$("#in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,160)+"px"}
 async function send(text){
@@ -277,26 +370,22 @@ async function send(text){
  const ta=$("#in");text=(typeof text==="string"?text:ta.value).trim();if(!text||!user)return;
  ta.value="";fit();const c=cur();
  c.msgs.push({role:"user",content:text});if(c.title==="محادثة جديدة")c.title=text.slice(0,32);
- const a={role:"assistant",content:""};c.msgs.push(a);busy=true;stopFlag=false;setBusy();renderAll();
+ const a={role:"assistant",content:"",typing:true};c.msgs.push(a);busy=true;stopFlag=false;setBusy();renderAll();
  await sleep(350);
  let r;try{r=engine.reply(text,store.mem)}catch(e){r={text:"حدث خطأ غير متوقع عندي 😅 حاول بصيغة أخرى."}}
  for(let i=0;i<r.text.length&&!stopFlag;i+=3){a.content=r.text.slice(0,i+3);paintLast(a);await sleep(12)}
- a.content=stopFlag?a.content+" …(أُوقف)":r.text;if(!stopFlag&&r.chips)a.chips=r.chips;
+ a.content=stopFlag?a.content+" …(أُوقف)":r.text;delete a.typing;if(!stopFlag&&r.chips)a.chips=r.chips;
+ if(r.unknown)logUnknown(text);
  busy=false;saveStore();renderAll();setBusy();
 }
 function delConv(id){store.convs=store.convs.filter(c=>c.id!==id);if(!store.convs.length||!cur())newConv();saveStore();renderAll()}
-/* ---- تسجيل الدخول بجوجل ---- */
-function showLogin(){user=null;$("#chat").hidden=true;$("#login").hidden=false;$("#user").innerHTML="";$("#title").textContent="SPA.AI"}
-function enter(u){user=u;loadStore();$("#login").hidden=true;$("#chat").hidden=false;
- $("#user").innerHTML=(u.picture?`<img src="${esc(u.picture)}" alt="">`:"")+`<span>${esc(u.name||"")}</span><button class="ib" id="out">خروج</button>`;
- $("#out").onclick=signOut;renderAll();setBusy()}
-function onCred(r){const p=jwt(r.credential);try{sessionStorage.setItem("spa_tok",r.credential)}catch(e){}enter({sub:p.sub,name:p.name||"",picture:p.picture||""})}
-function signOut(){try{sessionStorage.removeItem("spa_tok")}catch(e){}if(window.google&&google.accounts)google.accounts.id.disableAutoSelect();showLogin()}
-function initGoogle(){
- if(!window.google||!google.accounts)return setTimeout(initGoogle,300);
- google.accounts.id.initialize({client_id:CONFIG.GOOGLE_CLIENT_ID,callback:onCred,auto_select:true,cancel_on_tap_outside:false});
- google.accounts.id.renderButton($("#gbtn"),{theme:"filled_blue",size:"large",text:"signin_with",locale:"ar",shape:"pill"});
- if(!user)google.accounts.id.prompt();
+/* ---- تسجيل الدخول: موحّد لكل الموقع ---- */
+function showLogin(){user=null;$("#chat").hidden=true;$("#login").hidden=false;$("#title").textContent="SPA.AI"}
+function enter(u){user=u;loadStore();$("#login").hidden=true;$("#chat").hidden=false;renderAll();setBusy();try{$("#in").focus()}catch(e){}}
+function applyAuth(){
+ if(guest)return;
+ const u=window.SPA_AUTH&&window.SPA_AUTH.get();
+ if(u){if(!user||user.sub!==u.sub)enter(u)}else showLogin();
 }
 /* ---- الأحداث ---- */
 $("#send").onclick=()=>send();
@@ -305,10 +394,17 @@ $("#in").addEventListener("input",fit);
 $("#new").onclick=()=>{if(!user||busy)return;newConv();saveStore();renderAll();$("#side").classList.remove("open")};
 $("#menu").onclick=()=>$("#side").classList.toggle("open");
 $("#list").onclick=e=>{const d=e.target.dataset.del;if(d){delConv(d);return}const cv=e.target.closest(".cv");if(cv&&!busy){store.cur=cv.dataset.id;saveStore();renderAll();$("#side").classList.remove("open")}};
-$("#msgs").onclick=e=>{const q=e.target.dataset&&e.target.dataset.q;if(q&&!busy)send(q)};
-try{const t=sessionStorage.getItem("spa_tok");if(t){const p=jwt(t);if(p.exp*1000>Date.now()+60000)enter({sub:p.sub,name:p.name||"",picture:p.picture||""})}}catch(e){}
-if(!user&&/[?&]guest\b/.test(location.search))enter({sub:"guest",name:"ضيف",picture:""});
-initGoogle();
+$("#msgs").onclick=e=>{
+ const q=e.target.dataset&&e.target.dataset.q;if(q&&!busy){send(q);return}
+ const i=e.target.dataset&&e.target.dataset.copy;if(i!=null&&i!==""){const m=cur().msgs[+i];if(m){copyText(m.content);e.target.textContent="تم ✔";setTimeout(()=>{e.target.textContent="📋 نسخ"},1500)}}
+};
+$("#unkcopy").onclick=()=>{copyText(unknownList().join("\n"));$("#unkcopy").textContent="تم ✔";setTimeout(()=>{$("#unkcopy").textContent="نسخ"},1500)};
+$("#unkclr").onclick=()=>{try{localStorage.removeItem(UKEY)}catch(e){}renderUnknown()};
+$("#orig").textContent="عنوان موقعك كما يراه جوجل: "+location.origin;
+const A=window.SPA_AUTH;
+if(A){A.mount($("#gbtn"),{theme:"filled_blue",size:"large",text:"signin_with",locale:"ar",shape:"pill"});A.onChange(applyAuth)}
+if(/[?&]guest\b/.test(location.search)){guest=true;enter({sub:"guest",name:"ضيف",picture:""})}else applyAuth();
+
 </script>
 </body>
 </html>

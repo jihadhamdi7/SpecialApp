@@ -1,0 +1,55 @@
+name: Build Jisr
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    # لا يُعاد البناء عند تعديل صفحات الموقع، فقط عند تعديل كود التطبيق
+    paths: ["jisr/jisr.py", ".github/workflows/build-jisr.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: jisr
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Get scrcpy into tools
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download --repo Genymobile/scrcpy --pattern "scrcpy-win64-*.zip" --dir dl
+          Expand-Archive -Path (Get-ChildItem dl\*.zip).FullName -DestinationPath dl\x
+          New-Item -ItemType Directory -Force tools | Out-Null
+          Copy-Item dl\x\*\* tools -Recurse
+
+      - name: Build single exe
+        run: |
+          pip install pyinstaller
+          pyinstaller --noconsole --onefile --name Jisr --add-data "tools;tools" jisr.py
+
+      - name: Publish to fixed release "jisr" (keeps the download counter)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $base = 0
+          $old = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/jisr" 2>$null
+          if ($LASTEXITCODE -eq 0 -and $old) {
+            $j = $old | ConvertFrom-Json
+            if ($j.body -match 'base=(\d+)') { $base = [int]$Matches[1] }
+            foreach ($a in $j.assets) { if ($a.name -eq 'Jisr.exe') { $base += [int]$a.download_count } }
+            gh release edit jisr --notes "Jisr.exe ملف واحد. يحتوي scrcpy (Apache 2.0).`nbase=$base"
+          } else {
+            gh release create jisr --title "Jisr" --notes "Jisr.exe ملف واحد. يحتوي scrcpy (Apache 2.0).`nbase=0"
+          }
+          $global:LASTEXITCODE = 0
+          gh release upload jisr dist\Jisr.exe --clobber

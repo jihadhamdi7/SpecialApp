@@ -63,6 +63,7 @@ textarea:focus{outline:2px solid var(--b)}
  #menu{display:inline-block}
 }
 [hidden]{display:none!important}
+[hidden]{display:none!important}
 #auth{display:flex;align-items:center;gap:8px;min-height:38px}
 #auth .au{display:flex;align-items:center;gap:8px;font-size:.9rem}
 #auth .au img{width:30px;height:30px;border-radius:50%}
@@ -81,6 +82,15 @@ textarea:focus{outline:2px solid var(--b)}
 #unk{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
 #unk .ib{padding:2px 10px;font-size:.8rem}
 .warnb{border-color:rgba(255,176,32,.6)!important}
+.seg{display:flex;gap:6px;margin-bottom:8px}
+.seg button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:99px;padding:3px 14px;cursor:pointer;font:inherit}
+.seg button.on{background:linear-gradient(120deg,var(--a),var(--b));color:#fff;border-color:transparent}
+.imgbox{margin:8px 0}
+.imgph{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
+.gen{max-width:100%;border-radius:12px;display:block}
+.gen:not(.ok){position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.imgact{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.imgact a.rg{text-decoration:none}
 </style>
 </head>
 <body>
@@ -98,12 +108,12 @@ textarea:focus{outline:2px solid var(--b)}
   <h1 class="logo">✦ SPA.AI</h1>
   <p>مساعدك الذكي. سجّل الدخول بحساب جوجل وابدأ، بدون تحميل وبدون إعدادات. وإن سجّلت دخولك من أي صفحة في الموقع فسيفتح لك المساعد تلقائياً.</p>
   <div id="gbtn"></div>
-  <p class="note">النسخة 0 تجريبية: تجيب عن أسئلة تطبيقاتنا، وتحسب، وتحوّل الوحدات، وتخبرك بالتاريخ والوقت. محادثاتك تُحفظ في متصفحك فقط.</p>
+  <p class="note">النسخة 0 تجريبية: تجيب عن أسئلة تطبيقاتنا، وترسم لك صوراً من وصفك (بخدمة خارجية مجانية)، وتخبرك بالتاريخ والوقت. محادثاتك تُحفظ في متصفحك فقط.</p>
   <p class="note" id="orig"></p>
  </section>
  <section id="chat" hidden>
   <div id="msgs"></div>
-  <div class="comp"><div class="row"><textarea id="in" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال)"></textarea><button class="btn" id="send">إرسال</button></div></div>
+  <div class="comp"><div class="seg"><button id="m-chat" class="on" type="button">💬 دردشة</button><button id="m-image" type="button">🎨 صورة</button></div><div class="row"><textarea id="in" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال)"></textarea><button class="btn" id="send">إرسال</button></div></div>
  </section>
 </main>
 </div>
@@ -196,11 +206,11 @@ const KB=[
 {id:"apps",q:["ما التطبيقات الموجودة","ماذا لديكم من تطبيقات","قائمة التطبيقات","اظهر التطبيقات","ما الجديد","اي تطبيقات عندكم"],
  a:"حالياً: «جسر» لربط الهاتف بالحاسوب، و«SPA.AI» وهو أنا 😄 مساعدك الذكي. وتطبيقات أخرى قادمة قريباً."},
 {id:"privacy",q:["هل تجمعون بياناتي","هل محادثاتي خاصة","الخصوصية","هل تحفظون رسائلي","هل يتتبعني الموقع"],
- a:"محادثاتي معك تُحفظ في متصفحك أنت فقط. والموقع بلا إعلانات ولا تتبع، وتطبيقاتنا تعمل على جهازك."},
+ a:"محادثاتي معك تُحفظ في متصفحك أنت فقط. والموقع بلا إعلانات ولا تتبع، وتطبيقاتنا تعمل على جهازك. وعند طلب صورة يُرسَل وصفها إلى خدمة رسم خارجية مجانية."},
 {id:"who",q:["من انت","ما اسمك","ما هو spa.ai","ما هو spa ai","عرف بنفسك","ماذا تكون","مين انت"],
- a:"أنا SPA.AI، مساعد ذكي تجريبي (النسخة 0) في هذا الموقع. أجيب عن أسئلة تطبيقاتنا، وأحسب وأحوّل الوحدات وأخبرك بالتاريخ والوقت."},
+ a:"أنا SPA.AI، مساعد ذكي تجريبي (النسخة 0) في هذا الموقع. أجيب عن أسئلة تطبيقاتنا، وأرسم لك صوراً من وصفك، وأخبرك بالتاريخ والوقت."},
 {id:"can",q:["ماذا تستطيع ان تفعل","ما قدراتك","ماذا تفعل","مساعدة","help","اوامر","ماذا تعرف"],
- a:"أستطيع: الإجابة عن تطبيقات الموقع (جسر وغيره)، والحساب (مثل 15% من 240)، وتحويل الوحدات (10 كم إلى ميل)، والتاريخ والوقت، وإلقاء نرد أو عملة. وما لا أعرفه أقوله لك بصراحة."},
+ a:"أستطيع: الإجابة عن تطبيقات الموقع (جسر وغيره)، ورسم صور من وصفك (مثل «ارسم قطة تلبس نظارة»)، وإخبارك بالتاريخ والوقت. وما لا أعرفه أقوله لك بصراحة."},
 {id:"limits",q:["هل انت chatgpt","هل انت ذكاء اصطناعي حقيقي","هل انت gemini","هل تفهم كل شيء","ما حدودك","هل انت نموذج لغوي","كيف تعمل"],
  a:"أنا نموذج أولي تجريبي: أعمل بقواعد وقاعدة معرفة عن هذا الموقع وأدوات حساب وتحويل، ولست نموذجاً لغوياً كبيراً مثل ChatGPT. لذلك أخطئ أحياناً ولا أفهم كل سؤال، وسأتحسن مع الوقت."},
 {id:"contact",q:["كيف اتواصل معكم","رقم التواصل","بريد التواصل","اين اراسلكم","contact","طريقة التواصل"],
@@ -215,6 +225,8 @@ const KB=[
  a:"يتفعّل زر التحميل تلقائياً عندما يكون ملف جسر جاهزاً. فإن بقي مكتوباً «التحميل قريباً» فالنسخة لم تُنشر بعد، أو حدّث الصفحة بـ Ctrl+F5."},
 {id:"jisr_pair",q:["فشل الاقتران","الاقتران لا ينجح","الرمز لا يعمل","لم يجد الهاتف تلقائيا","pairing failed"],
  a:"الرمز ومنفذ الاقتران يتغيران كل مرة: أغلق نافذة الاقتران في الهاتف وافتحها من جديد، وتأكد أن الهاتف والحاسوب على نفس الواي فاي، ثم أعد المحاولة. وإن لم يُكتشف الهاتف فاكتب العناوين يدوياً في أسفل نافذة اللاسلكي."},
+{id:"image",q:["هل ترسم صور","هل تولد صور","كيف اولد صورة","كيف اصنع صوره","توليد الصور","هل يمكنك الرسم","رسم صور بالذكاء الاصطناعي"],
+ a:"نعم! اكتب مثلاً: «ارسم قطة تلبس نظارة شمسية»، أو اضغط «🎨 صورة» وصف ما تريد. الصور تُولَّد بخدمة خارجية مجانية قد تتأخر أو تتوقف أحياناً."},
 ];
 const DF={};
 const DOCS=KB.map(e=>{const t=toks(e.q.join(" "));const tf={};t.forEach(w=>tf[w]=(tf[w]||0)+1);Object.keys(tf).forEach(w=>DF[w]=(DF[w]||0)+1);return {e,tf}});
@@ -246,48 +258,6 @@ function rank(text){
 }
 const sure=(r,r2)=>r&&r.score>=0.25&&r.cov>=0.5&&(!r2||r.adj-r2.adj>=0.06);
 function retrieve(text){const r=rank(text);return r.length&&sure(r[0],r[1])?r[0]:null}
-function evalMath(expr){
- const tk=expr.match(/\d+(?:\.\d+)?|[+\-*/^()]/g)||[];let i=0;
- const peek=()=>tk[i],next=()=>tk[i++];
- function prim(){const t=next();if(t==="("){const v=add();if(next()!==")")throw 0;return v}if(t==="-")return -prim();if(t==="+")return prim();if(t===undefined||!/\d/.test(t))throw 0;return parseFloat(t)}
- function pow(){const b=prim();if(peek()==="^"){next();return Math.pow(b,pow())}return b}
- function mul(){let v=pow();while(peek()==="*"||peek()==="/"){const o=next(),r=pow();v=o==="*"?v*r:v/r}return v}
- function add(){let v=mul();while(peek()==="+"||peek()==="-"){const o=next(),r=mul();v=o==="+"?v+r:v-r}return v}
- const v=add();if(i!==tk.length||!isFinite(v))throw 0;return v;
-}
-const fmt=v=>Number.isInteger(v)?String(v):String(+v.toFixed(6));
-function mathAnswer(raw){
- let t=fold(raw);
- if(/\d{4}-\d{1,2}-\d{1,2}/.test(t))return null;
- let m=t.match(/(\d+(?:\.\d+)?)\s*(?:%|بالمئه|بالمايه|في المئه)\s*من\s*(\d+(?:\.\d+)?)/);
- if(m)return `${m[1]}% من ${m[2]} = ${fmt(parseFloat(m[1])*parseFloat(m[2])/100)}`;
- m=t.match(/جذر\s*(\d+(?:\.\d+)?)/);
- if(m)return `الجذر التربيعي لـ ${m[1]} = ${fmt(Math.sqrt(parseFloat(m[1])))}`;
- t=t.replace(/(\d)\s*(?:×|x|ضرب في|ضرب)\s*(?=[\d(])/g,"$1*").replace(/(\d)\s*(?:÷|مقسوم علي|قسمه علي|علي)\s*(?=[\d(])/g,"$1/")
-    .replace(/(\d)\s*(?:زائد|زايد)\s*(?=[\d(])/g,"$1+").replace(/(\d)\s*(?:−|ناقص)\s*(?=[\d(])/g,"$1-").replace(/(\d)\s*(?:اس|\*\*)\s*(?=\d)/g,"$1^");
- const cands=t.match(/(?:\d+(?:\.\d+)?|\()[\d+\-*/^().\s]*[\d)]/g)||[];
- let c=cands.filter(x=>/[+\-*/^]/.test(x)).sort((a,b)=>b.length-a.length)[0];
- if(!c)return null;
- const intent=/(احسب|كم يساوي|كم ناتج|ناتج|حاصل|يساوي|=|كم هو)/.test(t);
- if(!intent&&c.replace(/\s/g,"").length<t.replace(/\s/g,"").length*0.6)return null;
- try{const v=evalMath(c);return `${c.trim()} = ${fmt(v)}`}catch(e){return null}
-}
-const U=[["len","km",1000,"كم","كيلومتر","كيلومترات","km"],["len","m",1,"متر","m"],["len","cm",.01,"سم","سنتيمتر","cm"],["len","mi",1609.344,"ميل","اميال","mile","miles"],["len","ft",.3048,"قدم","ft","feet"],["len","in",.0254,"انش","بوصه","inch","inches"],
- ["mass","kg",1,"كيلو","كيلوغرام","كغ","كجم","kg"],["mass","g",.001,"غرام","جرام","g"],["mass","lb",.45359237,"باوند","رطل","lb","lbs"],["mass","oz",.028349523,"اونصه","oz"],
- ["temp","c",0,"سلسيوس","مئويه","c","celsius"],["temp","f",0,"فهرنهايت","f","fahrenheit"],["temp","k",0,"كلفن","k","kelvin"]];
-const UN={km:"كم",m:"متر",cm:"سم",mi:"ميل",ft:"قدم",in:"إنش",kg:"كيلوغرام",g:"غرام",lb:"باوند",oz:"أونصة",c:"°م",f:"°ف",k:"كلفن"};
-const ALIAS={};U.forEach(u=>u.slice(3).forEach(a=>ALIAS[fold(a)]=u));
-const ALT=Object.keys(ALIAS).sort((a,b)=>b.length-a.length).join("|");
-const UR=new RegExp("(-?\\d+(?:\\.\\d+)?)\\s*("+ALT+")\\s*(?:الي|to|in|=|بال|ل)?\\s*("+ALT+")(?![\\p{L}])","u");
-function convAnswer(raw){
- const m=fold(raw).match(UR);if(!m)return null;
- const v=parseFloat(m[1]),a=ALIAS[m[2]],b=ALIAS[m[3]];
- if(!a||!b||a[0]!==b[0]||a[1]===b[1])return null;
- let out;
- if(a[0]==="temp"){const c=a[1]==="c"?v:a[1]==="f"?(v-32)*5/9:v-273.15;out=b[1]==="c"?c:b[1]==="f"?c*9/5+32:c+273.15}
- else out=v*a[2]/b[2];
- return `${fmt(v)} ${UN[a[1]]} = ${fmt(+out.toFixed(4))} ${UN[b[1]]}`;
-}
 function dateTimeAnswer(raw){
  const t=fold(raw),now=new Date();
  const time=/(كم|ما|قل لي).*(الساعه|الوقت)|الساعه كم/.test(t),date=/(ما|ايش|اي|قل لي|كم).*(التاريخ|تاريخ اليوم|اليوم)/.test(t)||/تاريخ/.test(t);
@@ -297,15 +267,24 @@ function dateTimeAnswer(raw){
  const tm=now.toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"});
  return (date?`اليوم: ${g}${h?`\nالهجري: ${h}`:""}${time?"\n":""}`:"")+(time?`الوقت الآن: ${tm}`:"");
 }
-function randomAnswer(raw,rnd){
- const t=fold(raw);rnd=rnd||Math.random;
- if(/(عمله|قطعه نقود|صوره ام كتابه|صوره او كتابه)/.test(t))return rnd()<.5?"🪙 صورة":"🪙 كتابة";
- if(/(نرد|زهر)/.test(t))return "🎲 "+(1+Math.floor(rnd()*6));
- const m=t.match(/(?:اختر|رقم عشوائي|اعطني رقم).*?(\d+).*?(\d+)/);
- if(m){const a=Math.min(+m[1],+m[2]),b=Math.max(+m[1],+m[2]);return "🔢 "+(a+Math.floor(rnd()*(b-a+1)))}
+const FALLBACK_CHIPS=["ما هو جسر؟","ماذا تستطيع أن تفعل؟","ارسم قطة تلبس نظارة شمسية","ما التاريخ اليوم؟","اطلب تطبيقاً"];
+function imageSize(raw){return /(افقي|أفقي|أفقية|افقيه|عريض|landscape|wide)/i.test(raw)?[1024,576]:/(عمودي|طولي|portrait|للهاتف|ستوري)/i.test(raw)?[576,1024]:[768,768]}
+const CODE_WORDS=/^(?:برنامج|تطبيق|موقع|بوت|لعب|سكربت|كود|برمج|نظام|اداه|واجهه|صفح)/;
+const NOUN="(?:صورة|صوره|رسمة|رسمه|لوحة|لوحه|شعار|لوغو|لوجو)";
+const PRE="(?:(?:من فضلك|لو سمحت|ممكن|يا ذكي)\\s+)?";
+const VERB="(?:ارسم|أرسم|صمم|صمّم|ولد|ولّد|اصنع|أصنع|انشئ|أنشئ|اعمل|أعمل|اريد|أريد|ابغى|أبغى|ابي|اعطني|أعطني|اعطيني|أعطيني)";
+const cleanP=p=>{p=String(p||"").replace(/^(?:ل|لـ|عن)\s+/,"").trim().slice(0,300);return p.length>=2&&!new RegExp("^"+NOUN+"$").test(p)?p:null};
+function imageIntent(raw){
+ const r=String(raw).trim().replace(/[؟?!.]+$/,"");
+ let m=r.match(new RegExp("^"+PRE+VERB+"\\s*(?:لي|لنا)?\\s*"+NOUN+"\\s*(?:عن|لـ|ل|فيها|فيه)?\\s*(.+)$"));
+ if(m){const p=cleanP(m[1]);if(p)return p}
+ m=r.match(new RegExp("^"+PRE+"(?:ارسم|أرسم)\\s*(?:لي|لنا)?\\s*(.+)$"));
+ if(m&&!CODE_WORDS.test(fold(m[1]))){const p=cleanP(m[1]);if(p)return p}
+ m=r.match(/^(?:draw|paint)\s+(?:me\s+)?(?:an?\s+)?(.+)$/i)||r.match(/^(?:generate|create|make)\s+(?:me\s+)?(?:an?\s+)?(?:image|picture|photo)\s+(?:of\s+)?(.+)$/i);
+ if(m)return cleanP(m[1]);
  return null;
 }
-const FALLBACK_CHIPS=["ما هو جسر؟","ماذا تستطيع أن تفعل؟","احسب 15% من 240","حوّل 10 كم إلى ميل","اطلب تطبيقاً"];
+function imageReply(p,raw){const sz=imageSize(raw||p);return {text:"🎨 حاضر! أرسم لك: «"+p+"»",image:{prompt:String(p).slice(0,300),w:sz[0],h:sz[1],seed:Math.floor(Math.random()*1e6)}}}
 function createEngine(){
  return {reply(raw,mem,rnd){
   mem=mem||{};const t=fold(raw).trim();
@@ -320,7 +299,9 @@ function createEngine(){
   if(/(شكرا|مشكور|يعطيك العافيه|thanks|thank you)/.test(t))return {text:"على الرحب والسعة! 🌟"};
   if(/(مع السلامه|وداعا|الي اللقاء|bye)/.test(t))return {text:"مع السلامة! أراك قريباً 👋"};
   if(/^(من انت|مين انت|ما اسمك|ما هو اسمك|من تكون|عرف نفسك|عرف بنفسك)/.test(t))return {text:KB.find(e=>e.id==="who").a};
-  const r=mathAnswer(raw)||convAnswer(raw)||dateTimeAnswer(raw)||randomAnswer(raw,rnd);
+  const ip=imageIntent(raw);if(ip)return imageReply(ip,raw);
+  if(/^(?:ارسم|أرسم)(?:\s+لي)?(?:\s+صورة)?\s*$/.test(raw.trim()))return {text:"ماذا تريد أن أرسم؟ اكتب وصفاً، مثل: «ارسم قطة تلبس نظارة شمسية»",chips:["ارسم قطة تلبس نظارة شمسية","ارسم مدينة مستقبلية ليلاً"]};
+  const r=dateTimeAnswer(raw);
   if(r)return {text:r};
   const rk=rank(raw);
   if(sure(rk[0],rk[1]))return {text:rk[0].e.a};
@@ -332,7 +313,7 @@ function createEngine(){
 /*END-ENGINE*/
 
 const engine=createEngine();
-let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false,guest=false;
+let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false,guest=false,mode="chat";
 const cur=()=>store.convs.find(c=>c.id===store.cur);
 const skey=()=>"spa:"+user.sub;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -345,14 +326,24 @@ function loadStore(){
 function saveStore(){try{localStorage.setItem(skey(),JSON.stringify(store))}catch(e){}}
 function renderList(){$("#list").innerHTML=store.convs.map(c=>`<div class="cv${c.id===store.cur?" on":""}" data-id="${c.id}"><span>${esc(c.title)}</span><button class="x" data-del="${c.id}" title="حذف">✕</button></div>`).join("")}
 const chipsHTML=a=>a&&a.length?`<div class="chips">${a.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`:"";
+const imgURL=im=>"https://image.pollinations.ai/prompt/"+encodeURIComponent(im.prompt)+"?width="+im.w+"&height="+im.h+"&seed="+im.seed+"&nologo=true&model=flux";
+function imgHTML(m,i){
+ const u=imgURL(m.image);
+ return `<div class="imgbox"><div class="imgph">🎨 جارٍ الرسم… قد يستغرق حتى نصف دقيقة</div><img class="gen" src="${esc(u)}" alt="${esc(m.image.prompt)}"></div><div class="imgact"><a class="rg" href="${esc(u)}" target="_blank" rel="noopener noreferrer">🔗 فتح الصورة</a> <button class="rg" data-reimg="${i}" type="button">↻ نسخة أخرى</button></div><div class="note">تُولَّد بخدمة خارجية مجانية وقد تتأخر أو تتوقف أحياناً.</div>`;
+}
+const IKEY="spa_img",IMG_LIMIT=20;
+const today=()=>new Date().toISOString().slice(0,10);
+function imgLeft(){try{const o=JSON.parse(localStorage.getItem(IKEY));return o&&o.d===today()?Math.max(0,IMG_LIMIT-o.n):IMG_LIMIT}catch(e){return IMG_LIMIT}}
+function useImg(){const left=imgLeft();if(left<=0)return false;try{localStorage.setItem(IKEY,JSON.stringify({d:today(),n:IMG_LIMIT-left+1}))}catch(e){}return true}
 function msgHTML(m,i){
  if(m.role==="user")return `<div class="m u">${esc(m.content).replace(/\n/g,"<br>")}</div>`;
  const cp=m.content&&!m.typing?`<div><button class="rg" data-copy="${i}">📋 نسخ</button></div>`:"";
- return `<div class="m a">${fmtMsg(m.content||"…")}${chipsHTML(m.chips)}${cp}</div>`;
+ const im=m.image&&!m.typing?imgHTML(m,i):"";
+ return `<div class="m a">${fmtMsg(m.content||"…")}${im}${chipsHTML(m.chips)}${cp}</div>`;
 }
 function renderMsgs(){
  const c=cur(),box=$("#msgs"),n=store.mem.name?" يا "+esc(store.mem.name):"";
- box.innerHTML=c.msgs.length?c.msgs.map(msgHTML).join(""):`<div class="empty"><h2>أهلاً${n}! أنا SPA.AI 👋</h2><p>اسألني عن تطبيقاتنا، أو اطلب حساباً أو تحويلاً.</p>${chipsHTML(FALLBACK_CHIPS)}</div>`;
+ box.innerHTML=c.msgs.length?c.msgs.map(msgHTML).join(""):`<div class="empty"><h2>أهلاً${n}! أنا SPA.AI 👋</h2><p>اسألني عن تطبيقاتنا، أو اطلب مني أن أرسم لك صورة 🎨</p>${chipsHTML(FALLBACK_CHIPS)}</div>`;
  box.scrollTop=box.scrollHeight;$("#title").textContent=c.title;
 }
 function paintLast(a){const els=document.querySelectorAll("#msgs .m.a");const el=els[els.length-1];if(el){el.innerHTML=fmtMsg(a.content||"…");const b=$("#msgs");b.scrollTop=b.scrollHeight}}
@@ -372,9 +363,10 @@ async function send(text){
  c.msgs.push({role:"user",content:text});if(c.title==="محادثة جديدة")c.title=text.slice(0,32);
  const a={role:"assistant",content:"",typing:true};c.msgs.push(a);busy=true;stopFlag=false;setBusy();renderAll();
  await sleep(350);
- let r;try{r=engine.reply(text,store.mem)}catch(e){r={text:"حدث خطأ غير متوقع عندي 😅 حاول بصيغة أخرى."}}
+ let r;try{r=mode==="image"?imageReply(text,text):engine.reply(text,store.mem)}catch(e){r={text:"حدث خطأ غير متوقع عندي 😅 حاول بصيغة أخرى."}}
+ if(r.image&&!useImg())r={text:"وصلت إلى حدّك اليومي من الصور ("+IMG_LIMIT+"). عد غداً 🌙"};
  for(let i=0;i<r.text.length&&!stopFlag;i+=3){a.content=r.text.slice(0,i+3);paintLast(a);await sleep(12)}
- a.content=stopFlag?a.content+" …(أُوقف)":r.text;delete a.typing;if(!stopFlag&&r.chips)a.chips=r.chips;
+ a.content=stopFlag?a.content+" …(أُوقف)":r.text;delete a.typing;if(!stopFlag&&r.chips)a.chips=r.chips;if(!stopFlag&&r.image)a.image=r.image;
  if(r.unknown)logUnknown(text);
  busy=false;saveStore();renderAll();setBusy();
 }
@@ -394,7 +386,13 @@ $("#in").addEventListener("input",fit);
 $("#new").onclick=()=>{if(!user||busy)return;newConv();saveStore();renderAll();$("#side").classList.remove("open")};
 $("#menu").onclick=()=>$("#side").classList.toggle("open");
 $("#list").onclick=e=>{const d=e.target.dataset.del;if(d){delConv(d);return}const cv=e.target.closest(".cv");if(cv&&!busy){store.cur=cv.dataset.id;saveStore();renderAll();$("#side").classList.remove("open")}};
+function setMode(x){mode=x;$("#m-chat").classList.toggle("on",x==="chat");$("#m-image").classList.toggle("on",x==="image");$("#in").placeholder=x==="image"?"صف الصورة… مثال: قطة تلبس نظارة شمسية على الشاطئ":"اكتب رسالتك… (Enter للإرسال)"}
+$("#m-chat").onclick=()=>setMode("chat");$("#m-image").onclick=()=>setMode("image");
+$("#msgs").addEventListener("load",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){t.classList.add("ok");const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.remove()}},true);
+$("#msgs").addEventListener("error",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.textContent="تعذر توليد الصورة الآن: الخدمة المجانية مزدحمة أو متوقفة. جرّب «↻ نسخة أخرى» بعد قليل."}},true);
 $("#msgs").onclick=e=>{
+ const ri=e.target.dataset&&e.target.dataset.reimg;
+ if(ri!=null&&ri!==""){const m=cur().msgs[+ri];if(m&&m.image){if(useImg()){m.image.seed=Math.floor(Math.random()*1e6);saveStore();renderAll()}else e.target.textContent="انتهى حدّك اليومي"}return}
  const q=e.target.dataset&&e.target.dataset.q;if(q&&!busy){send(q);return}
  const i=e.target.dataset&&e.target.dataset.copy;if(i!=null&&i!==""){const m=cur().msgs[+i];if(m){copyText(m.content);e.target.textContent="تم ✔";setTimeout(()=>{e.target.textContent="📋 نسخ"},1500)}}
 };

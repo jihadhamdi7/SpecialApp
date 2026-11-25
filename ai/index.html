@@ -210,7 +210,7 @@ const KB=[
 {id:"who",q:["من انت","ما اسمك","ما هو spa.ai","ما هو spa ai","عرف بنفسك","ماذا تكون","مين انت"],
  a:"أنا SPA.AI، مساعد ذكي تجريبي (النسخة 0) في هذا الموقع. أجيب عن أسئلة تطبيقاتنا، وأرسم لك صوراً من وصفك، وأخبرك بالتاريخ والوقت."},
 {id:"can",q:["ماذا تستطيع ان تفعل","ما قدراتك","ماذا تفعل","مساعدة","help","اوامر","ماذا تعرف"],
- a:"أستطيع: الإجابة عن تطبيقات الموقع (جسر وغيره)، ورسم صور من وصفك (مثل «ارسم قطة تلبس نظارة»)، وإخبارك بالتاريخ والوقت. وما لا أعرفه أقوله لك بصراحة."},
+ a:"أستطيع: الإجابة عن تطبيقات الموقع (جسر وغيره)، ورسم صور مناسبة للجميع من وصفك، وإخبارك بالتاريخ والوقت. وما لا أعرفه أقوله لك بصراحة."},
 {id:"limits",q:["هل انت chatgpt","هل انت ذكاء اصطناعي حقيقي","هل انت gemini","هل تفهم كل شيء","ما حدودك","هل انت نموذج لغوي","كيف تعمل"],
  a:"أنا نموذج أولي تجريبي: أعمل بقواعد وقاعدة معرفة عن هذا الموقع وأدوات حساب وتحويل، ولست نموذجاً لغوياً كبيراً مثل ChatGPT. لذلك أخطئ أحياناً ولا أفهم كل سؤال، وسأتحسن مع الوقت."},
 {id:"contact",q:["كيف اتواصل معكم","رقم التواصل","بريد التواصل","اين اراسلكم","contact","طريقة التواصل"],
@@ -226,7 +226,7 @@ const KB=[
 {id:"jisr_pair",q:["فشل الاقتران","الاقتران لا ينجح","الرمز لا يعمل","لم يجد الهاتف تلقائيا","pairing failed"],
  a:"الرمز ومنفذ الاقتران يتغيران كل مرة: أغلق نافذة الاقتران في الهاتف وافتحها من جديد، وتأكد أن الهاتف والحاسوب على نفس الواي فاي، ثم أعد المحاولة. وإن لم يُكتشف الهاتف فاكتب العناوين يدوياً في أسفل نافذة اللاسلكي."},
 {id:"image",q:["هل ترسم صور","هل تولد صور","كيف اولد صورة","كيف اصنع صوره","توليد الصور","هل يمكنك الرسم","رسم صور بالذكاء الاصطناعي"],
- a:"نعم! اكتب مثلاً: «ارسم قطة تلبس نظارة شمسية»، أو اضغط «🎨 صورة» وصف ما تريد. الصور تُولَّد بخدمة خارجية مجانية قد تتأخر أو تتوقف أحياناً."},
+ a:"نعم. اكتب «ارسم» ثم وصف ما تريد، أو اضغط «🎨 صورة». أرسم صوراً مناسبة للجميع فقط، وأرفض أي محتوى فاضح. وتُولَّد الصور بخدمة خارجية مجانية قد تتأخر أو تتوقف أحياناً، ولا يوجد مرشّح مثالي، فإن ظهرت صورة غير مناسبة فاضغط «🚩» لإزالتها."},
 ];
 const DF={};
 const DOCS=KB.map(e=>{const t=toks(e.q.join(" "));const tf={};t.forEach(w=>tf[w]=(tf[w]||0)+1);Object.keys(tf).forEach(w=>DF[w]=(DF[w]||0)+1);return {e,tf}});
@@ -267,7 +267,18 @@ function dateTimeAnswer(raw){
  const tm=now.toLocaleTimeString("ar",{hour:"2-digit",minute:"2-digit"});
  return (date?`اليوم: ${g}${h?`\nالهجري: ${h}`:""}${time?"\n":""}`:"")+(time?`الوقت الآن: ${tm}`:"");
 }
-const FALLBACK_CHIPS=["ما هو جسر؟","ماذا تستطيع أن تفعل؟","ارسم قطة تلبس نظارة شمسية","ما التاريخ اليوم؟","اطلب تطبيقاً"];
+const FALLBACK_CHIPS=[];
+const SAFE_SUFFIX=", fully clothed, wearing clothes, safe for work, family friendly";
+const SAFE_QS="&safe=true&private=true&enhance=false&nologo=true&model=flux&negative_prompt="+encodeURIComponent("nude, naked, nsfw, nudity, topless, lingerie, underwear, sexual");
+const BAD_EXACT=new Set(["عار","عاري","عاريه","عاريات","عراه","عري","تعري","جنس","سكس","سيكس","مثير","مثيره","اغراء","فاضح","فاضحه","عاهره","بورن","بورنو","nude","naked","nsfw","porn","porno","sex","sexy","sexual","erotic","topless","lingerie","bikini","underwear","boobs","breast","breasts","nipple","nipples","butt","ass","hentai","ecchi","lewd","fetish","undressed","xxx","loli","shota","nudity","strip","stripper","bra","panties","thong","cleavage"]);
+const BAD_PART=["عاري","متعري","تعريه","اباح","جنسي","ثدي","مؤخر","شهو","شبق","بكيني","مايوه","ملابس داخلي","بدون ملابس","بلا ملابس","نصف عار"];
+function unsafePrompt(p){
+ const f=fold(p);
+ const toks=f.split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(w=>w.replace(/^ال/,""));
+ if(toks.some(w=>BAD_EXACT.has(w)))return true;
+ if(BAD_PART.some(x=>f.includes(x)))return true;
+ return /\b(no|without)\s+(clothes|clothing)\b/.test(f);
+}
 function imageSize(raw){return /(افقي|أفقي|أفقية|افقيه|عريض|landscape|wide)/i.test(raw)?[1024,576]:/(عمودي|طولي|portrait|للهاتف|ستوري)/i.test(raw)?[576,1024]:[768,768]}
 const CODE_WORDS=/^(?:برنامج|تطبيق|موقع|بوت|لعب|سكربت|كود|برمج|نظام|اداه|واجهه|صفح)/;
 const NOUN="(?:صورة|صوره|رسمة|رسمه|لوحة|لوحه|شعار|لوغو|لوجو)";
@@ -284,7 +295,7 @@ function imageIntent(raw){
  if(m)return cleanP(m[1]);
  return null;
 }
-function imageReply(p,raw){const sz=imageSize(raw||p);return {text:"🎨 حاضر! أرسم لك: «"+p+"»",image:{prompt:String(p).slice(0,300),w:sz[0],h:sz[1],seed:Math.floor(Math.random()*1e6)}}}
+function imageReply(p,raw){if(unsafePrompt(p))return {text:"لا أستطيع رسم هذا الطلب. أرسم صوراً مناسبة للجميع فقط."};const sz=imageSize(raw||p);return {text:"🎨 حاضر! أرسم لك: «"+p+"»",image:{prompt:String(p).slice(0,300),w:sz[0],h:sz[1],seed:Math.floor(Math.random()*1e6)}}}
 function createEngine(){
  return {reply(raw,mem,rnd){
   mem=mem||{};const t=fold(raw).trim();
@@ -293,21 +304,21 @@ function createEngine(){
   if(m){mem.name=m[1];return {text:`تشرفت بمعرفتك يا ${mem.name}! 😊 كيف أساعدك؟`}}
   if(/(ما اسمي|ما هو اسمي|هل تعرف اسمي|من انا)/.test(t))return {text:mem.name?`اسمك ${mem.name} 😊`:"لا أعرف اسمك بعد. قل لي: «اسمي ...»"};
   const n=mem.name?` يا ${mem.name}`:"";
-  if(/^(?:ال)?سلام عليكم/.test(t))return {text:`وعليكم السلام ورحمة الله وبركاته${n} 👋 أنا SPA.AI، كيف أساعدك؟`,chips:FALLBACK_CHIPS.slice(0,3)};
-  if(/^(مرحبا|اهلا|هلا|هاي|هلو|hello|hi|hey|صباح الخير|مساء الخير)(\s|$|!)/.test(t))return {text:`أهلاً${n}! 👋 أنا SPA.AI، كيف أساعدك؟`,chips:FALLBACK_CHIPS.slice(0,3)};
+  if(/^(?:ال)?سلام عليكم/.test(t))return {text:`وعليكم السلام ورحمة الله وبركاته${n} 👋 أنا SPA.AI، كيف أساعدك؟`};
+  if(/^(مرحبا|اهلا|هلا|هاي|هلو|hello|hi|hey|صباح الخير|مساء الخير)(\s|$|!)/.test(t))return {text:`أهلاً${n}! 👋 أنا SPA.AI، كيف أساعدك؟`};
   if(/(كيف حالك|كيفك|شلونك|كيف الحال)/.test(t))return {text:"بخير والحمد لله، شكراً لسؤالك 😊 كيف أساعدك؟"};
   if(/(شكرا|مشكور|يعطيك العافيه|thanks|thank you)/.test(t))return {text:"على الرحب والسعة! 🌟"};
   if(/(مع السلامه|وداعا|الي اللقاء|bye)/.test(t))return {text:"مع السلامة! أراك قريباً 👋"};
   if(/^(من انت|مين انت|ما اسمك|ما هو اسمك|من تكون|عرف نفسك|عرف بنفسك)/.test(t))return {text:KB.find(e=>e.id==="who").a};
   const ip=imageIntent(raw);if(ip)return imageReply(ip,raw);
-  if(/^(?:ارسم|أرسم)(?:\s+لي)?(?:\s+صورة)?\s*$/.test(raw.trim()))return {text:"ماذا تريد أن أرسم؟ اكتب وصفاً، مثل: «ارسم قطة تلبس نظارة شمسية»",chips:["ارسم قطة تلبس نظارة شمسية","ارسم مدينة مستقبلية ليلاً"]};
+  if(/^(?:ارسم|أرسم)(?:\s+لي)?(?:\s+صورة)?\s*$/.test(raw.trim()))return {text:"ماذا تريد أن أرسم؟ اكتب وصفاً بعد كلمة «ارسم»."};
   const r=dateTimeAnswer(raw);
   if(r)return {text:r};
   const rk=rank(raw);
   if(sure(rk[0],rk[1]))return {text:rk[0].e.a};
   const near=rk.filter(x=>x.adj>=0.12&&x.cov>=0.5).slice(0,3);
-  if(near.length)return {text:"لم أفهم سؤالك تماماً. هل تقصد أحد هذه؟",chips:near.map(x=>x.e.q[0]+"؟"),unknown:true};
-  return {text:"لا أعرف الإجابة عن هذا بعد 🤔 أنا نموذج تجريبي أتعلم. جرّب أن تسألني عن:",chips:FALLBACK_CHIPS,unknown:true};
+  if(near.length)return {text:"لم أفهم سؤالك تماماً. حاول كتابته بصيغة أخرى، أو اذكر اسم التطبيق الذي تقصده.",unknown:true};
+  return {text:"لا أعرف الإجابة عن هذا بعد 🤔 أنا نموذج تجريبي أتعلم. اسألني عن تطبيقات الموقع وسأحاول مساعدتك.",unknown:true};
  }};
 }
 /*END-ENGINE*/
@@ -321,15 +332,16 @@ function newConv(){const c={id:"c"+Date.now(),title:"محادثة جديدة",ms
 function loadStore(){
  try{store=JSON.parse(localStorage.getItem(skey()))||{convs:[],cur:null,mem:{}}}catch(e){store={convs:[],cur:null,mem:{}}}
  store.mem=store.mem||{};if(!store.mem.name&&user.name)store.mem.name=user.name.split(" ")[0];
+ if(store.v!==2){store.convs.forEach(c=>c.msgs.forEach(m=>{if(m.image){delete m.image;m.content="(أُزيلت صورة قديمة)"}}));store.v=2}
  if(!store.convs.length||!cur())newConv();
 }
 function saveStore(){try{localStorage.setItem(skey(),JSON.stringify(store))}catch(e){}}
 function renderList(){$("#list").innerHTML=store.convs.map(c=>`<div class="cv${c.id===store.cur?" on":""}" data-id="${c.id}"><span>${esc(c.title)}</span><button class="x" data-del="${c.id}" title="حذف">✕</button></div>`).join("")}
 const chipsHTML=a=>a&&a.length?`<div class="chips">${a.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`:"";
-const imgURL=im=>"https://image.pollinations.ai/prompt/"+encodeURIComponent(im.prompt)+"?width="+im.w+"&height="+im.h+"&seed="+im.seed+"&nologo=true&model=flux";
+const imgURL=im=>"https://image.pollinations.ai/prompt/"+encodeURIComponent(im.prompt+SAFE_SUFFIX)+"?width="+im.w+"&height="+im.h+"&seed="+im.seed+SAFE_QS;
 function imgHTML(m,i){
  const u=imgURL(m.image);
- return `<div class="imgbox"><div class="imgph">🎨 جارٍ الرسم… قد يستغرق حتى نصف دقيقة</div><img class="gen" src="${esc(u)}" alt="${esc(m.image.prompt)}"></div><div class="imgact"><a class="rg" href="${esc(u)}" target="_blank" rel="noopener noreferrer">🔗 فتح الصورة</a> <button class="rg" data-reimg="${i}" type="button">↻ نسخة أخرى</button></div><div class="note">تُولَّد بخدمة خارجية مجانية وقد تتأخر أو تتوقف أحياناً.</div>`;
+ return `<div class="imgbox"><div class="imgph">🎨 جارٍ الرسم… قد يستغرق حتى نصف دقيقة</div><img class="gen" src="${esc(u)}" alt="${esc(m.image.prompt)}"></div><div class="imgact"><a class="rg" href="${esc(u)}" target="_blank" rel="noopener noreferrer">🔗 فتح الصورة</a> <button class="rg" data-reimg="${i}" type="button">↻ نسخة أخرى</button> <button class="rg" data-report="${i}" type="button">🚩 غير مناسبة</button></div><div class="note">تُولَّد بخدمة خارجية مجانية وقد تتأخر أو تتوقف أحياناً.</div>`;
 }
 const IKEY="spa_img",IMG_LIMIT=20;
 const today=()=>new Date().toISOString().slice(0,10);
@@ -343,7 +355,7 @@ function msgHTML(m,i){
 }
 function renderMsgs(){
  const c=cur(),box=$("#msgs"),n=store.mem.name?" يا "+esc(store.mem.name):"";
- box.innerHTML=c.msgs.length?c.msgs.map(msgHTML).join(""):`<div class="empty"><h2>أهلاً${n}! أنا SPA.AI 👋</h2><p>اسألني عن تطبيقاتنا، أو اطلب مني أن أرسم لك صورة 🎨</p>${chipsHTML(FALLBACK_CHIPS)}</div>`;
+ box.innerHTML=c.msgs.length?c.msgs.map(msgHTML).join(""):`<div class="empty"><h2>أهلاً${n}! أنا SPA.AI 👋</h2><p>اسألني عن تطبيقاتنا، أو اكتب «ارسم» ثم وصف الصورة 🎨</p>${chipsHTML(FALLBACK_CHIPS)}</div>`;
  box.scrollTop=box.scrollHeight;$("#title").textContent=c.title;
 }
 function paintLast(a){const els=document.querySelectorAll("#msgs .m.a");const el=els[els.length-1];if(el){el.innerHTML=fmtMsg(a.content||"…");const b=$("#msgs");b.scrollTop=b.scrollHeight}}
@@ -386,11 +398,13 @@ $("#in").addEventListener("input",fit);
 $("#new").onclick=()=>{if(!user||busy)return;newConv();saveStore();renderAll();$("#side").classList.remove("open")};
 $("#menu").onclick=()=>$("#side").classList.toggle("open");
 $("#list").onclick=e=>{const d=e.target.dataset.del;if(d){delConv(d);return}const cv=e.target.closest(".cv");if(cv&&!busy){store.cur=cv.dataset.id;saveStore();renderAll();$("#side").classList.remove("open")}};
-function setMode(x){mode=x;$("#m-chat").classList.toggle("on",x==="chat");$("#m-image").classList.toggle("on",x==="image");$("#in").placeholder=x==="image"?"صف الصورة… مثال: قطة تلبس نظارة شمسية على الشاطئ":"اكتب رسالتك… (Enter للإرسال)"}
+function setMode(x){mode=x;$("#m-chat").classList.toggle("on",x==="chat");$("#m-image").classList.toggle("on",x==="image");$("#in").placeholder=x==="image"?"صف الصورة التي تريدها…":"اكتب رسالتك… (Enter للإرسال)"}
 $("#m-chat").onclick=()=>setMode("chat");$("#m-image").onclick=()=>setMode("image");
 $("#msgs").addEventListener("load",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){t.classList.add("ok");const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.remove()}},true);
 $("#msgs").addEventListener("error",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.textContent="تعذر توليد الصورة الآن: الخدمة المجانية مزدحمة أو متوقفة. جرّب «↻ نسخة أخرى» بعد قليل."}},true);
 $("#msgs").onclick=e=>{
+ const rp=e.target.dataset&&e.target.dataset.report;
+ if(rp!=null&&rp!==""){const m=cur().msgs[+rp];if(m&&m.image){try{const l=JSON.parse(localStorage.getItem("spa_reports")||"[]");l.push(m.image.prompt);localStorage.setItem("spa_reports",JSON.stringify(l.slice(-100)))}catch(x){}delete m.image;m.content="(أُزيلت الصورة بناءً على بلاغك. شكراً لك)";saveStore();renderAll()}return}
  const ri=e.target.dataset&&e.target.dataset.reimg;
  if(ri!=null&&ri!==""){const m=cur().msgs[+ri];if(m&&m.image){if(useImg()){m.image.seed=Math.floor(Math.random()*1e6);saveStore();renderAll()}else e.target.textContent="انتهى حدّك اليومي"}return}
  const q=e.target.dataset&&e.target.dataset.q;if(q&&!busy){send(q);return}

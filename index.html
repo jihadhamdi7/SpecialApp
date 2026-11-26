@@ -127,7 +127,7 @@ textarea.fld{min-height:130px;resize:vertical}
 <div class="links"><a class="keep" href="#home" data-n="home">الرئيسية</a><a class="keep" href="#apps" data-n="apps">التطبيقات</a><a class="keep" href="ai/" data-n="ai">SPA.AI</a><a href="#order" data-n="order">اطلب تطبيقاً</a><a href="#about" data-n="about">عن الموقع</a><span id="auth"></span><button class="tg" id="tg" aria-label="تبديل الوضع">◐</button></div>
 </div></nav>
 <div id="v"></div>
-<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 11</div></footer>
+<footer><div class="wrap">© تطبيقاتي — صُنع بشغف · إصدار الموقع 12</div></footer>
 <script>
 document.documentElement.classList.add("js");
 const CONTACT="mailto:you@example.com";
@@ -234,14 +234,16 @@ $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedi
 </script>
 <script>
 (function(){
- const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user";
+ const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user",TKEY="spa_token";
  const pending=[];let ok=false;
  const get=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}};
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
  const emit=()=>window.dispatchEvent(new Event("spa-auth"));
- function signOut(){try{localStorage.removeItem(KEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
- function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));emit()}catch(e){}}
+ function token(){try{const o=JSON.parse(localStorage.getItem(TKEY));return o&&o.exp*1000>Date.now()+60000?o.t:null}catch(e){return null}}
+ function refresh(){try{google.accounts.id.prompt()}catch(e){}}
+ function signOut(){try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
+ function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));localStorage.setItem(TKEY,JSON.stringify({t:r.credential,exp:p.exp}));emit()}catch(e){}}
  function help(){alert("تعذر عرض زر جوجل.\nعنوان موقعك كما يراه جوجل:\n"+location.origin+"\n\nتحقق من الآتي:\n١) أن هذا العنوان مكتوب بالضبط في Authorized JavaScript origins (بدون / في آخره).\n٢) أن التطبيق منشور: Google Auth Platform ← Audience ← Publish app.\n٣) انتظر 5 دقائق بعد أي تعديل، وجرّب نافذة التصفح الخفي، وأوقف مانع الإعلانات.")}
  function warn(el,txt){el.innerHTML='<button class="warnb" type="button">'+txt+'</button>';el.firstChild.onclick=help}
  function watch(el){setTimeout(()=>{if(el&&el.children.length===0)warn(el,"⚠ مشكلة بتسجيل الدخول")},6000)}
@@ -250,7 +252,7 @@ $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedi
   if(window.google&&google.accounts&&google.accounts.id){
    google.accounts.id.initialize({client_id:CID,callback:cb,auto_select:true,cancel_on_tap_outside:false});
    ok=true;pending.splice(0).forEach(p=>mount(p[0],p[1]));
-   if(!get()){try{google.accounts.id.prompt()}catch(e){}}
+   if(!get()||!token()){try{google.accounts.id.prompt()}catch(e){}}
    return;
   }
   if(n>80){pending.splice(0).forEach(p=>warn(p[0],"⚠ تعذر تحميل جوجل"));return}
@@ -268,7 +270,7 @@ $("#tg").onclick=()=>{const d=R.dataset.theme?R.dataset.theme==="dark":matchMedi
  }
  window.addEventListener("spa-auth",renderNav);
  window.addEventListener("storage",e=>{if(e.key===KEY)renderNav()});
- window.SPA_AUTH={get,signOut,mount,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
+ window.SPA_AUTH={get,signOut,mount,token,refresh,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
  renderNav();init(0);
 })();
 </script>

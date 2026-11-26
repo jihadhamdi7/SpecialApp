@@ -91,6 +91,8 @@ textarea:focus{outline:2px solid var(--b)}
 .gen:not(.ok){position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .imgact{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
 .imgact a.rg{text-decoration:none}
+.imgtools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.imgtools select{width:auto;padding:5px 10px;margin:0;font-size:.9rem}
 </style>
 </head>
 <body>
@@ -99,6 +101,7 @@ textarea:focus{outline:2px solid var(--b)}
  <div class="sh"><b class="logo">✦ SPA.AI</b><button class="ib" id="new">＋ جديدة</button></div>
  <div id="list"></div>
  <div id="quota">النسخة 0 · تجريبية
+  <div id="imgleft" class="note"></div>
   <div id="unk" hidden><span id="unkn"></span><button class="ib" id="unkcopy" type="button">نسخ</button><button class="ib" id="unkclr" type="button">مسح</button></div>
  </div>
 </aside>
@@ -113,20 +116,22 @@ textarea:focus{outline:2px solid var(--b)}
  </section>
  <section id="chat" hidden>
   <div id="msgs"></div>
-  <div class="comp"><div class="seg"><button id="m-chat" class="on" type="button">💬 دردشة</button><button id="m-image" type="button">🎨 صورة</button></div><div class="row"><textarea id="in" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال)"></textarea><button class="btn" id="send">إرسال</button></div></div>
+  <div class="comp"><div class="seg"><button id="m-chat" class="on" type="button">💬 دردشة</button><button id="m-image" type="button">🎨 صورة</button></div><div class="imgtools" id="imgtools" hidden><select id="o-style" aria-label="الأسلوب"><option value="realistic">واقعي</option><option value="anime">أنمي</option><option value="3d">ثلاثي الأبعاد</option><option value="cinematic">سينمائي</option><option value="fantasy">خيالي</option><option value="watercolor">ألوان مائية</option><option value="digital">رسم رقمي</option></select><select id="o-size" aria-label="الحجم"><option value="1024x1024">مربع</option><option value="1536x1024">أفقي</option><option value="1024x1536">عمودي</option></select><button type="button" class="ib" id="o-attach">📎 تعديل صورة</button><input type="file" id="o-file" accept="image/png,image/jpeg,image/webp" hidden><button type="button" class="ib" id="o-pending" hidden></button></div><div class="row"><textarea id="in" rows="1" placeholder="اكتب رسالتك… (Enter للإرسال)"></textarea><button class="btn" id="send">إرسال</button></div></div>
  </section>
 </main>
 </div>
 <script>
 (function(){
- const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user";
+ const CID="75323104711-gdue9gavlidds8v8bjdna13obh7jc6tt.apps.googleusercontent.com",KEY="spa_user",TKEY="spa_token";
  const pending=[];let ok=false;
  const get=()=>{try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}};
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  function jwt(t){let b=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}
  const emit=()=>window.dispatchEvent(new Event("spa-auth"));
- function signOut(){try{localStorage.removeItem(KEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
- function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));emit()}catch(e){}}
+ function token(){try{const o=JSON.parse(localStorage.getItem(TKEY));return o&&o.exp*1000>Date.now()+60000?o.t:null}catch(e){return null}}
+ function refresh(){try{google.accounts.id.prompt()}catch(e){}}
+ function signOut(){try{localStorage.removeItem(KEY);localStorage.removeItem(TKEY)}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}emit()}
+ function cb(r){try{const p=jwt(r.credential);localStorage.setItem(KEY,JSON.stringify({sub:p.sub,name:p.name||"",picture:p.picture||"",ts:Date.now()}));localStorage.setItem(TKEY,JSON.stringify({t:r.credential,exp:p.exp}));emit()}catch(e){}}
  function help(){alert("تعذر عرض زر جوجل.\nعنوان موقعك كما يراه جوجل:\n"+location.origin+"\n\nتحقق من الآتي:\n١) أن هذا العنوان مكتوب بالضبط في Authorized JavaScript origins (بدون / في آخره).\n٢) أن التطبيق منشور: Google Auth Platform ← Audience ← Publish app.\n٣) انتظر 5 دقائق بعد أي تعديل، وجرّب نافذة التصفح الخفي، وأوقف مانع الإعلانات.")}
  function warn(el,txt){el.innerHTML='<button class="warnb" type="button">'+txt+'</button>';el.firstChild.onclick=help}
  function watch(el){setTimeout(()=>{if(el&&el.children.length===0)warn(el,"⚠ مشكلة بتسجيل الدخول")},6000)}
@@ -135,7 +140,7 @@ textarea:focus{outline:2px solid var(--b)}
   if(window.google&&google.accounts&&google.accounts.id){
    google.accounts.id.initialize({client_id:CID,callback:cb,auto_select:true,cancel_on_tap_outside:false});
    ok=true;pending.splice(0).forEach(p=>mount(p[0],p[1]));
-   if(!get()){try{google.accounts.id.prompt()}catch(e){}}
+   if(!get()||!token()){try{google.accounts.id.prompt()}catch(e){}}
    return;
   }
   if(n>80){pending.splice(0).forEach(p=>warn(p[0],"⚠ تعذر تحميل جوجل"));return}
@@ -153,12 +158,14 @@ textarea:focus{outline:2px solid var(--b)}
  }
  window.addEventListener("spa-auth",renderNav);
  window.addEventListener("storage",e=>{if(e.key===KEY)renderNav()});
- window.SPA_AUTH={get,signOut,mount,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
+ window.SPA_AUTH={get,signOut,mount,token,refresh,onChange:fn=>{window.addEventListener("spa-auth",fn);window.addEventListener("storage",e=>{if(e.key===KEY)fn()})}};
  renderNav();init(0);
 })();
 
 </script>
 <script>
+/* ضع هنا رابط محرك الصور بعد تشغيله (انظر image-engine/README.md). إن تُرك فارغاً تعمل خدمة الرسم المجانية. */
+const CONFIG={IMAGE_API:""};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtMsg=s=>esc(s).replace(/\*\*([^*\n]+)\*\*/g,"<b>$1</b>").replace(/\n/g,"<br>");
@@ -324,7 +331,7 @@ function createEngine(){
 /*END-ENGINE*/
 
 const engine=createEngine();
-let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false,guest=false,mode="chat";
+let user=null,store={convs:[],cur:null,mem:{}},busy=false,stopFlag=false,guest=false,mode="chat",pendingImg=null,ctrl=null;
 const cur=()=>store.convs.find(c=>c.id===store.cur);
 const skey=()=>"spa:"+user.sub;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -335,7 +342,7 @@ function loadStore(){
  if(store.v!==2){store.convs.forEach(c=>c.msgs.forEach(m=>{if(m.image){delete m.image;m.content="(أُزيلت صورة قديمة)"}}));store.v=2}
  if(!store.convs.length||!cur())newConv();
 }
-function saveStore(){try{localStorage.setItem(skey(),JSON.stringify(store))}catch(e){}}
+function saveStore(){try{localStorage.setItem(skey(),JSON.stringify(store,(k,v)=>k==="imgData"||k==="loading"?undefined:v))}catch(e){}}
 function renderList(){$("#list").innerHTML=store.convs.map(c=>`<div class="cv${c.id===store.cur?" on":""}" data-id="${c.id}"><span>${esc(c.title)}</span><button class="x" data-del="${c.id}" title="حذف">✕</button></div>`).join("")}
 const chipsHTML=a=>a&&a.length?`<div class="chips">${a.map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>`:"";
 const imgURL=im=>"https://image.pollinations.ai/prompt/"+encodeURIComponent(im.prompt+SAFE_SUFFIX)+"?width="+im.w+"&height="+im.h+"&seed="+im.seed+SAFE_QS;
@@ -347,11 +354,25 @@ const IKEY="spa_img",IMG_LIMIT=20;
 const today=()=>new Date().toISOString().slice(0,10);
 function imgLeft(){try{const o=JSON.parse(localStorage.getItem(IKEY));return o&&o.d===today()?Math.max(0,IMG_LIMIT-o.n):IMG_LIMIT}catch(e){return IMG_LIMIT}}
 function useImg(){const left=imgLeft();if(left<=0)return false;try{localStorage.setItem(IKEY,JSON.stringify({d:today(),n:IMG_LIMIT-left+1}))}catch(e){}return true}
+function svHTML(m,i){
+ const ext=(m.imgData.slice(11,m.imgData.indexOf(";"))||"png").replace(/[^a-z0-9]/g,"");
+ return `<div class="imgbox"><img class="gen ok" src="${esc(m.imgData)}" alt="${esc(m.content)}"></div><div class="imgact"><a class="rg" href="${esc(m.imgData)}" download="spa-image.${ext}">⬇ تنزيل</a> <button class="rg" data-report="${i}" type="button">🚩 غير مناسبة</button></div>${m.improved?`<div class="note">الوصف المحسَّن: ${esc(m.improved)}</div>`:""}`;
+}
+function fitSize(w,h,max){const k=Math.min(1,max/Math.max(w,h));return [Math.round(w*k),Math.round(h*k)]}
+function fileToDataURL(file){
+ return new Promise((resolve,reject)=>{
+  if(!/^image\/(png|jpeg|webp)$/.test(file.type))return reject(new Error("استخدم صورة PNG أو JPG أو WEBP."));
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{const s=fitSize(img.naturalWidth,img.naturalHeight,1536),cv=document.createElement("canvas");cv.width=s[0];cv.height=s[1];cv.getContext("2d").drawImage(img,0,0,s[0],s[1]);URL.revokeObjectURL(url);resolve(cv.toDataURL("image/jpeg",0.9))};
+  img.onerror=()=>reject(new Error("تعذر قراءة الصورة."));img.src=url;
+ });
+}
 function msgHTML(m,i){
  if(m.role==="user")return `<div class="m u">${esc(m.content).replace(/\n/g,"<br>")}</div>`;
  const cp=m.content&&!m.typing?`<div><button class="rg" data-copy="${i}">📋 نسخ</button></div>`:"";
  const im=m.image&&!m.typing?imgHTML(m,i):"";
- return `<div class="m a">${fmtMsg(m.content||"…")}${im}${chipsHTML(m.chips)}${cp}</div>`;
+ const sv=m.loading?'<div class="imgph">🎨 جارٍ الرسم… قد يستغرق حتى دقيقة</div>':(m.imgData?svHTML(m,i):"");
+ return `<div class="m a">${fmtMsg(m.content||"…")}${im}${sv}${chipsHTML(m.chips)}${cp}</div>`;
 }
 function renderMsgs(){
  const c=cur(),box=$("#msgs"),n=store.mem.name?" يا "+esc(store.mem.name):"";
@@ -368,24 +389,48 @@ function copyText(txt){try{if(navigator.clipboard){navigator.clipboard.writeText
 function renderAll(){renderList();renderMsgs();renderUnknown()}
 function setBusy(){$("#send").textContent=busy?"■ إيقاف":"إرسال"}
 function fit(){const t=$("#in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,160)+"px"}
+const showLeft=l=>{$("#imgleft").textContent=l?"المتبقي اليوم: 🎨 "+l.generate+" · ✏️ "+l.edit:""};
+async function loadLeft(){try{const A=window.SPA_AUTH,tk=A&&A.token&&A.token();if(!CONFIG.IMAGE_API||!tk)return;const r=await fetch(CONFIG.IMAGE_API.replace(/\/$/,"")+"/me",{headers:{Authorization:"Bearer "+tk}});if(r.ok){const j=await r.json();showLeft(j.left)}}catch(e){}}
+function showPending(){const b=$("#o-pending");b.hidden=!pendingImg;b.textContent=pendingImg?"🖼️ صورة مرفقة للتعديل ✕":""}
+async function runServer(a,s){
+ ctrl=new AbortController();
+ try{
+  const A=window.SPA_AUTH,tk=A&&A.token&&A.token();
+  if(!tk){if(A&&A.refresh)A.refresh();throw new Error(guest?"سجّل الدخول بحساب جوجل لاستخدام الرسم.":"انتهت جلستك. سجّل الدخول من جديد ثم أعد الطلب.")}
+  const pick=$("#o-size").value||"1024x1024";
+  const size=pick!=="1024x1024"?pick:(s.w>s.h?"1536x1024":s.h>s.w?"1024x1536":"1024x1024");
+  const body=s.edit?{instruction:s.instruction,image:s.image,size}:{prompt:s.prompt,style:$("#o-style").value||"realistic",size};
+  const res=await fetch(CONFIG.IMAGE_API.replace(/\/$/,"")+(s.edit?"/edit":"/generate"),{method:"POST",headers:{"Authorization":"Bearer "+tk,"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctrl.signal});
+  const j=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(j.error||("خطأ "+res.status));
+  a.imgData=j.image;a.improved=j.improvedPrompt||"";if(j.left)showLeft(j.left);
+ }catch(e){a.content=e.name==="AbortError"?"(أُوقف)":"⚠ "+e.message;a.err=e.name!=="AbortError"}
+ a.loading=false;
+}
 async function send(text){
- if(busy){stopFlag=true;return}
+ if(busy){stopFlag=true;if(ctrl)ctrl.abort();return}
  const ta=$("#in");text=(typeof text==="string"?text:ta.value).trim();if(!text||!user)return;
  ta.value="";fit();const c=cur();
  c.msgs.push({role:"user",content:text});if(c.title==="محادثة جديدة")c.title=text.slice(0,32);
  const a={role:"assistant",content:"",typing:true};c.msgs.push(a);busy=true;stopFlag=false;setBusy();renderAll();
  await sleep(350);
- let r;try{r=mode==="image"?imageReply(text,text):engine.reply(text,store.mem)}catch(e){r={text:"حدث خطأ غير متوقع عندي 😅 حاول بصيغة أخرى."}}
- if(r.image&&!useImg())r={text:"وصلت إلى حدّك اليومي من الصور ("+IMG_LIMIT+"). عد غداً 🌙"};
+ let r;
+ try{
+  if(CONFIG.IMAGE_API&&mode==="image"&&pendingImg)r=unsafePrompt(text)?{text:"لا أستطيع تنفيذ هذا التعديل. أعدّل صوراً مناسبة للجميع فقط."}:{text:"✏️ أعدّل الصورة: «"+text+"»",server:{edit:true,instruction:text,image:pendingImg}};
+  else r=mode==="image"?imageReply(text,text):engine.reply(text,store.mem);
+ }catch(e){r={text:"حدث خطأ غير متوقع عندي 😅 حاول بصيغة أخرى."}}
+ if(r.image&&CONFIG.IMAGE_API)r={text:r.text,server:{edit:false,prompt:r.image.prompt,w:r.image.w,h:r.image.h}};
+ else if(r.image&&!useImg())r={text:"وصلت إلى حدّك اليومي من الصور ("+IMG_LIMIT+"). عد غداً 🌙"};
  for(let i=0;i<r.text.length&&!stopFlag;i+=3){a.content=r.text.slice(0,i+3);paintLast(a);await sleep(12)}
  a.content=stopFlag?a.content+" …(أُوقف)":r.text;delete a.typing;if(!stopFlag&&r.chips)a.chips=r.chips;if(!stopFlag&&r.image)a.image=r.image;
  if(r.unknown)logUnknown(text);
+ if(r.server&&!stopFlag){a.loading=true;renderAll();await runServer(a,r.server);if(r.server.edit){pendingImg=null;showPending()}}
  busy=false;saveStore();renderAll();setBusy();
 }
 function delConv(id){store.convs=store.convs.filter(c=>c.id!==id);if(!store.convs.length||!cur())newConv();saveStore();renderAll()}
 /* ---- تسجيل الدخول: موحّد لكل الموقع ---- */
 function showLogin(){user=null;$("#chat").hidden=true;$("#login").hidden=false;$("#title").textContent="SPA.AI"}
-function enter(u){user=u;loadStore();$("#login").hidden=true;$("#chat").hidden=false;renderAll();setBusy();try{$("#in").focus()}catch(e){}}
+function enter(u){user=u;loadStore();loadLeft();$("#login").hidden=true;$("#chat").hidden=false;renderAll();setBusy();try{$("#in").focus()}catch(e){}}
 function applyAuth(){
  if(guest)return;
  const u=window.SPA_AUTH&&window.SPA_AUTH.get();
@@ -398,13 +443,16 @@ $("#in").addEventListener("input",fit);
 $("#new").onclick=()=>{if(!user||busy)return;newConv();saveStore();renderAll();$("#side").classList.remove("open")};
 $("#menu").onclick=()=>$("#side").classList.toggle("open");
 $("#list").onclick=e=>{const d=e.target.dataset.del;if(d){delConv(d);return}const cv=e.target.closest(".cv");if(cv&&!busy){store.cur=cv.dataset.id;saveStore();renderAll();$("#side").classList.remove("open")}};
-function setMode(x){mode=x;$("#m-chat").classList.toggle("on",x==="chat");$("#m-image").classList.toggle("on",x==="image");$("#in").placeholder=x==="image"?"صف الصورة التي تريدها…":"اكتب رسالتك… (Enter للإرسال)"}
+function setMode(x){mode=x;$("#imgtools").hidden=!(x==="image"&&CONFIG.IMAGE_API);$("#m-chat").classList.toggle("on",x==="chat");$("#m-image").classList.toggle("on",x==="image");$("#in").placeholder=x==="image"?"صف الصورة التي تريدها…":"اكتب رسالتك… (Enter للإرسال)"}
 $("#m-chat").onclick=()=>setMode("chat");$("#m-image").onclick=()=>setMode("image");
+$("#o-attach").onclick=()=>$("#o-file").click();
+$("#o-file").onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{pendingImg=await fileToDataURL(f);showPending();setMode("image")}catch(x){alert(x.message)}e.target.value=""};
+$("#o-pending").onclick=()=>{pendingImg=null;showPending()};
 $("#msgs").addEventListener("load",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){t.classList.add("ok");const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.remove()}},true);
 $("#msgs").addEventListener("error",e=>{const t=e.target;if(t&&t.classList&&t.classList.contains("gen")){const ph=t.parentElement&&t.parentElement.querySelector(".imgph");if(ph)ph.textContent="تعذر توليد الصورة الآن: الخدمة المجانية مزدحمة أو متوقفة. جرّب «↻ نسخة أخرى» بعد قليل."}},true);
 $("#msgs").onclick=e=>{
  const rp=e.target.dataset&&e.target.dataset.report;
- if(rp!=null&&rp!==""){const m=cur().msgs[+rp];if(m&&m.image){try{const l=JSON.parse(localStorage.getItem("spa_reports")||"[]");l.push(m.image.prompt);localStorage.setItem("spa_reports",JSON.stringify(l.slice(-100)))}catch(x){}delete m.image;m.content="(أُزيلت الصورة بناءً على بلاغك. شكراً لك)";saveStore();renderAll()}return}
+ if(rp!=null&&rp!==""){const m=cur().msgs[+rp];if(m&&(m.image||m.imgData)){try{const l=JSON.parse(localStorage.getItem("spa_reports")||"[]");l.push(m.image?m.image.prompt:(m.improved||m.content));localStorage.setItem("spa_reports",JSON.stringify(l.slice(-100)))}catch(x){}delete m.image;delete m.imgData;delete m.improved;m.content="(أُزيلت الصورة بناءً على بلاغك. شكراً لك)";saveStore();renderAll()}return}
  const ri=e.target.dataset&&e.target.dataset.reimg;
  if(ri!=null&&ri!==""){const m=cur().msgs[+ri];if(m&&m.image){if(useImg()){m.image.seed=Math.floor(Math.random()*1e6);saveStore();renderAll()}else e.target.textContent="انتهى حدّك اليومي"}return}
  const q=e.target.dataset&&e.target.dataset.q;if(q&&!busy){send(q);return}
